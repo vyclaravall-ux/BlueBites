@@ -1,0 +1,13 @@
+# IDE
+.vscode/
+*.code-profile
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dependencies (if you add any)
+node_modules/

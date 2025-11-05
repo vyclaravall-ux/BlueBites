@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue Bites — Login</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a id="top"></a>
+  <div class="wrapper">
+    <header class="header">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <nav class="nav">
+        <a href="index.html">About</a>
+        <a href="objectives.html">Objectives</a>
+        <a href="map.html">Map</a>
+        <a href="shop.html#filtersTop">Filter Menu</a>
+        <a href="budget.html">Budget Tracker</a>
+        <a class="btn" href="profile.html">Profile</a>
+      </nav>
+    </header>
+
+    <section class="section" style="max-width:720px;margin:0 auto;">
+      <h1 class="h1">Log in</h1>
+      <p class="subtle">Use your school email to continue.</p>
+      <form id="loginForm" class="form" style="margin-top:16px">
+        <div class="row">
+          <div>
+            <div class="label">Name</div>
+            <input id="name" class="input" type="text" placeholder="Juan Dela Cruz" required />
+          </div>
+          <div>
+            <div class="label">School email</div>
+            <input id="email" class="input" type="email" placeholder="username@student.ateneo.edu" required />
+          </div>
+        </div>
+        <button class="submit" type="submit">Continue</button>
+      </form>
+    </section>
+
+    <footer class="footer">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <div class="actions">
+        <a class="action-btn action-primary" href="index.html">Home</a>
+        <a class="action-btn action-secondary" href="#top">Back to Top</a>
+      </div>
+    </footer>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

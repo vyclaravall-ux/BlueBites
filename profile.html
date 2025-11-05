@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue Bites — Profile</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a id="top"></a>
+  <div class="wrapper">
+    <header class="header">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <nav class="nav">
+        <a href="map.html">Map</a>
+        <a href="shop.html#filtersTop">Filter Menu</a>
+        <a href="budget.html">Budget Tracker</a>
+        <a class="btn" href="profile.html">Profile</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <section class="section">
+      <div style="display:flex; align-items:center; gap:18px;">
+        <div>
+          <h1 class="h1" id="profileName">Username</h1>
+          <div class="subtle" id="profileEmail">ateneoemailaccount@student.ateneo.edu</div>
+        </div>
+        <div style="margin-left:auto;">
+          <button id="logoutBtn" class="fav-btn">Log out</button>
+        </div>
+      </div>
+
+      <h3 class="mt-28">Favorites ☆</h3>
+
+      <div class="card mt-28" style="padding:16px;">
+        <strong>Favorite Meals</strong>
+        <ul id="favMeals" style="margin-top:10px"></ul>
+      </div>
+
+      <div class="card mt-28" style="padding:16px;">
+        <strong>Favorite Food Stalls</strong>
+        <div class="cards mt-28">
+          <div class="card-item"><div style="height:120px;background:#e5e7eb;border-radius:10px"></div></div>
+          <div class="card-item"><div style="height:120px;background:#e5e7eb;border-radius:10px"></div></div>
+          <div class="card-item"><div style="height:120px;background:#e5e7eb;border-radius:10px"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <div class="actions">
+        <a class="action-btn action-primary" href="index.html">Home</a>
+        <a class="action-btn action-secondary" href="#top">Back to Top</a>
+      </div>
+    </footer>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

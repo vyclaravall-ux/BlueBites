@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blue Bite — Product</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a id="top"></a>
+  <div class="wrapper">
+    <header class="header">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <nav class="nav">
+        <a href="objectives.html">Objectives</a>
+        <a href="map.html">Map</a>
+        <a href="shop.html#filtersTop">Filter Menu</a>
+        <a href="budget.html">Budget Tracker</a>
+        <a class="btn" href="profile.html">Profile</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <section class="section">
+      <div class="detail">
+        <img id="productImage" class="media" src="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop" alt="Food" />
+        <div>
+          <h2 id="productName" class="h1">Food Name</h2>
+          <div id="productStall" class="small">Food Stall</div>
+          <div id="productPrice" class="badge mt-28">PHP 100.00</div>
+          <p id="productDescription" class="mt-28">Subtext to describe what the meal includes, its ingredients, and allergen contents.</p>
+          <a class="favorite" href="#">Add to Favorites</a>
+          <button id="productFavBtn" class="fav-btn" data-id="prod-1">☆ Favorite</button>
+
+          <div id="productAddOns" class="mt-28" style="display: none;">
+            <strong>Available Add-Ons</strong>
+            <p class="small">Here are the available add-ons for this meal:</p>
+            <div id="addOnsList" class="checklist">
+              <label><input type="checkbox" /> Add-On 1</label>
+              <label><input type="checkbox" /> Add-On 2</label>
+              <label><input type="checkbox" /> Add-On 3</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sameStallSection">
+        <h3 id="sameStallTitle" class="mt-28">More from [Stall Name]</h3>
+        <div id="sameStallProducts" class="cards mt-28">
+          <!-- Products from the same stall will be dynamically loaded -->
+        </div>
+      </div>
+
+      <div id="otherStallsSection">
+        <h3 class="mt-28">You May Also Like</h3>
+        <div id="otherStallsProducts" class="cards mt-28">
+          <!-- Products from other stalls will be dynamically loaded -->
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <div class="actions">
+        <a class="action-btn action-primary" href="index.html">Home</a>
+        <a class="action-btn action-secondary" href="#top">Back to Top</a>
+      </div>
+    </footer>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>
