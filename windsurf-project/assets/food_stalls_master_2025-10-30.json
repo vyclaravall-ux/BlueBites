@@ -1,0 +1,69 @@
+[
+  {
+    "stall_name": "Aja K-Fusion",
+    "category": "K-Food",
+    "branch": "Gonzaga 1st Floor",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Jjajangmyeon",
+        "description": "Savory black bean noodles with vegetables and egg",
+        "price": "₱120",
+        "category": "Meal",
+        "allergens": ["Egg", "Wheat", "Soy", "Fish", "Shellfish"],
+        "image": "https://images.unsplash.com/photo-1625940645240-6eefea4f2a3b?q=80&w=1200&auto=format&fit=crop",
+        "calories": 450,
+        "serving_size": "350g"
+      },
+      {
+        "item": "Hotteok",
+        "description": "Sweet Korean pancake with brown sugar and nuts",
+        "price": "₱85",
+        "category": "Dessert",
+        "allergens": ["Wheat"],
+        "image": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=1200&auto=format&fit=crop",
+        "calories": 280,
+        "serving_size": "120g"
+      }
+    ]
+  },
+  {
+    "stall_name": "Baoba",
+    "category": "Beverages",
+    "branch": "JSEC",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1521305916504-4a1121188589?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Brown Sugar Milk Tea",
+        "description": "Milk tea with brown sugar pearls and creamy foam",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": ["Dairy"],
+        "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop",
+        "calories": 320,
+        "serving_size": "500ml"
+      },
+      {
+        "item": "Lemon Yakult Tea",
+        "description": "Zesty lemon tea with creamy Yakult",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?q=80&w=1200&auto=format&fit=crop",
+        "calories": 180,
+        "serving_size": "500ml"
+      }
+    ]
+  },
+  { "stall_name": "Hunger Buster", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Potato Corner", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Good Taste", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Chunky Chicks", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1551782450-17144c3fa706?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Juz Juiz", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1521305916504-4a1121188589?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Obento Express", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Mr. Softy", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Iggy's Canteen", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1447078806655-40579c2520d6?q=80&w=1200&auto=format&fit=crop", "menu": [] },
+  { "stall_name": "Marvin’s Taho", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=1200&auto=format&fit=crop", "menu": [] }
+]
