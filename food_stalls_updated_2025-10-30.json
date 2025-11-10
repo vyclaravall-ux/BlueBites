@@ -1,0 +1,548 @@
+[
+  {
+    "stall_name": "Aja K-Fusion",
+    "category": "Korean",
+    "branch": "Gonzaga 1st Floor",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Jjajangmyeon",
+        "type": "Comfort",
+        "description": "Savory black bean noodles with vegetables and egg",
+        "price": "₱120",
+        "category": "Meal",
+        "allergens": ["Egg", "Wheat", "Soy", "Fish", "Shellfish"],
+        "image": "https://images.unsplash.com/photo-1625940645240-6eefea4f2a3b?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Jjajangmyeon",
+        "type": "Truffled",
+        "description": "Savory black bean noodles with vegetables and egg, elevated with truffle oil",
+        "price": "₱150",
+        "category": "Meal",
+        "allergens": ["Egg", "Wheat", "Soy", "Fish", "Shellfish"],
+        "image": "https://images.unsplash.com/photo-1625940645240-6eefea4f2a3b?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "K-sisig",
+        "type": "1-type only",
+        "description": "Crispy sisig infused with Korean spices and chili for a bold, savory kick. Does not include add-on Egg",
+        "price": "₱130",
+        "category": "Meal",
+        "allergens": ["Egg", "Wheat", "Soy"],
+        "image": "https://images.unsplash.com/photo-1591814463526-a2c4d5c04a5b?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hotteok",
+        "type": "Original",
+        "description": "Sweet Korean pancake with brown sugar and nuts",
+        "price": "₱50",
+        "category": "Dessert",
+        "allergens": ["Wheat"],
+        "image": "https://images.unsplash.com/photo-1612929633738-8fe44ad4048e?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hotteok",
+        "type": "Malt Choco",
+        "description": "Sweet Korean pancake with brown sugar, nuts, and malt chocolate filling",
+        "price": "₱50",
+        "category": "Dessert",
+        "allergens": ["Wheat", "Dairy"],
+        "image": "https://images.unsplash.com/photo-1612929633738-8fe44ad4048e?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hotteok",
+        "type": "Turon",
+        "description": "Sweet Korean pancake with brown sugar, nuts, and banana filling",
+        "price": "₱60",
+        "category": "Dessert",
+        "allergens": ["Wheat"],
+        "image": "https://images.unsplash.com/photo-1612929633738-8fe44ad4048e?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  },
+  {
+    "stall_name": "Baoba",
+    "category": "Beverages & More",
+    "branch": "JSEC",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1521305916504-4a1121188589?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Brown Sugar Milk Tea",
+        "type": "Regular",
+        "description": "Milk tea with brown sugar pearls and creamy foam. Add P20 for chewy boba.",
+        "price": "₱180",
+        "category": "Drink",
+        "allergens": ["Dairy"],
+        "image": "https://images.unsplash.com/photo-1561023800-356928b5e7bc?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Signature Pork Xiao Long Bao",
+        "type": "4pcs",
+        "description": "The Best. Period. Served with Baoba's secret sauce",
+        "price": "₱120",
+        "category": "Dimsum",
+        "image": "https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Pan Fried Pork Dumplings",
+        "type": "4pcs",
+        "description": "Simple, tasty, and addicting! Served with Baoba's secret sauce",
+        "price": "₱120",
+        "category": "Dimsum",
+        "image": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Original (Ala Carte)",
+        "description": "Perfectly seasoned with our Baoba's secret blend, served with gravy",
+        "price": "₱140",
+        "category": "Meal"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Original with Rice",
+        "description": "Perfectly seasoned with our Baoba's secret blend, served with gravy and rice",
+        "price": "₱160",
+        "category": "Meal"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Plum Powder (Ala Carte)",
+        "description": "Sweet, tangy and slightly tart, served with gravy",
+        "price": "₱140",
+        "category": "Meal"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Plum Powder with Rice",
+        "description": "Sweet, tangy and slightly tart, served with gravy and rice",
+        "price": "₱160",
+        "category": "Meal"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "BBQ Powder (Ala Carte)",
+        "description": "Smoky, spicy, and irresistibly bold! Served with gravy",
+        "price": "₱140",
+        "category": "Meal"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "BBQ Powder with Rice",
+        "description": "Smoky, spicy, and irresistibly bold! Served with gravy and rice",
+        "price": "₱160",
+        "category": "Meal"
+      },
+      {
+        "item": "Refreshing Wintermelon Tea",
+        "type": "Regular",
+        "description": "Refreshing wintermelon tea, perfect for hot days",
+        "price": "₱60",
+        "category": "Drink"
+      }
+    ]
+  },
+  {
+    "stall_name": "Hunger Buster",
+    "category": "Burgers",
+    "branch": "New Rizal Library",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Texan BBQ Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, white onions and hickory texas bbq sauce",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Bacon Two Cheese",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, cheese slice and melted cheese",
+        "price": "₱130",
+        "category": "Burger"
+      },
+      {
+        "item": "BLT Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, lettuce, tomato and melted cheese",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Rising Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, sunny side up and condiments",
+        "price": "₱110",
+        "category": "Burger"
+      },
+      {
+        "item": "Flaming",
+        "type": "200g pure beef patty",
+        "description": "Chicken skin & Siracha Mayo",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Dying",
+        "type": "200g pure beef patty",
+        "description": "Mushroom & Bacon",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Craving",
+        "type": "200g pure beef patty",
+        "description": "Ketchup, mayo, mustard",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Burning",
+        "type": "200g pure beef patty",
+        "description": "Chili con carne & mayo",
+        "price": "₱120",
+        "category": "Burger"
+      },
+      {
+        "item": "Starving",
+        "type": "200g pure beef patty",
+        "description": "BBQ sauce & onions",
+        "price": "₱100",
+        "category": "Burger"
+      },
+      {
+        "item": "Craving 2.0",
+        "type": "200g pure beef patty",
+        "description": "Ranch & Jalapeno",
+        "price": "₱100",
+        "category": "Burger"
+      }
+    ]
+  },
+  {
+    "stall_name": "Potato Corner",
+    "category": "Snacks",
+    "branch": "Gonzaga 1st Floor",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Cheese Flavors",
+        "type": "Regular",
+        "price": "₱39",
+        "category": "Snack"
+      },
+      {
+        "item": "Sour Cream",
+        "type": "Large",
+        "price": "₱65",
+        "category": "Snack"
+      },
+      {
+        "item": "BBQ",
+        "type": "Jumbo",
+        "price": "₱95",
+        "category": "Snack"
+      },
+      {
+        "item": "Sour Cheese",
+        "type": "Mega (2 Flavors)",
+        "price": "₱125",
+        "category": "Snack"
+      },
+      {
+        "item": "Chili BBQ",
+        "type": "Giga (2 Flavors)",
+        "price": "₱195",
+        "category": "Snack"
+      },
+      {
+        "item": "Chili BBQ",
+        "type": "Tera (3 Flavors)",
+        "price": "₱225",
+        "category": "Snack"
+      }
+    ]
+  },
+  {
+    "stall_name": "Silingan Coffee",
+    "category": "Beverages",
+    "branch": "New Rizal Library",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1498804103079-d09b6850a5b3?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Iced Coffee",
+        "type": "Americano",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Cafe Latte",
+        "price": "₱140",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Cappuccino",
+        "price": "₱140",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Mocha Latte",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Caramel Macchiato",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Dulce Latte",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Pride Over Iced",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Hazelnut Latte",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Almond Latte",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Nutella Iced Coffee",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Strawberry",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Blueberry",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Mango",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Americano",
+        "price": "₱110",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Cafe Latte",
+        "price": "₱120",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Cappuccino",
+        "price": "₱120",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Mocha Latte",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Caramel Macchiato",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Dulce Latte",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Pride Over Iced",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Hazelnut Latte",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Almond Latte",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Iced Matcha",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Matcha",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Iced Choco",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Choco",
+        "price": "₱130",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Freedom Tea",
+        "price": "₱100",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Horchata",
+        "price": "₱150",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Inked Horchata",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Dirty Matcha",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Green Horchata (pandan)",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Matcha Horchata",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Nutella Horchata",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "MatchaBerry",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Coffee Based",
+        "type": "Mocha Frappe",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Coffee Based",
+        "type": "Caramel Frappe",
+        "price": "₱170",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Matcha Frappe",
+        "price": "₱180",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Strawberry Cream",
+        "price": "₱180",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Cookies and Cream",
+        "price": "₱180",
+        "category": "Drink"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Choco Cream Frappe",
+        "price": "₱180",
+        "category": "Drink"
+      }
+    ]
+  },
+  {
+    "stall_name": "The Breakfast Club",
+    "category": "Meals & Beverages",
+    "branch": "JSEC",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1484723091739-30a097d8f7b8?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Mochi Waffles & Chicken Karaage",
+        "description": "A classic with a Japanese twist. Crunch and chew served with furikake and maple syrup",
+        "price": "₱180",
+        "category": "Meal"
+      },
+      {
+        "item": "Breakfast Bibimbap",
+        "description": "Our take on a classic! Homemade sausage, seasonal veggies, pickled onions, gojuchang-base sauce",
+        "price": "₱180",
+        "category": "Meal"
+      },
+      {
+        "item": "Jasmine Lemonade",
+        "description": "48-hr jasmine cold-brew homemade syrup with freshly squeezed lemonade",
+        "price": "₱70",
+        "category": "Drink"
+      }
+    ]
+  }
+]

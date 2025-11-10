@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <script>
+    // Check if user is logged in
+    (function() {
+      const user = JSON.parse(localStorage.getItem('bb_session_user') || 'null');
+      if (!user) {
+        // Store the current page to return after login
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `login.html?next=${next}`;
+      }
+    })();
+  </script>
   <a id="top"></a>
   <div class="wrapper">
     <header class="header">

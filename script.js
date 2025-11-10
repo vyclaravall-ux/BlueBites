@@ -26,17 +26,22 @@
   };
 // ---- Local JSON (preferred when available) ----
   let localDataCache = null;
-  async function getLocalData(){
-    if(localDataCache) return localDataCache;
+  async function getLocalData(forceRefresh = false){
+    if(localDataCache && !forceRefresh) return localDataCache;
     try{
-      const res = await fetch(LOCAL_JSON, { cache:'no-store' });
+      // Add timestamp to force cache bust
+      const url = `${LOCAL_JSON}?t=${Date.now()}`;
+      const res = await fetch(url, { cache:'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if(!res.ok) throw new Error('local json missing');
       localDataCache = await res.json();
       return localDataCache;
     }catch(e){
+      console.error('Error loading local data:', e);
       return null;
     }
   }
+  // Clear cache on page load to ensure fresh data
+  window.addEventListener('load', () => { localDataCache = null; });
   
 
   function getFavorites(){
@@ -54,85 +59,321 @@
   function hydrateFavButtons(){
     $all('.fav-btn').forEach(btn => {
       const id = btn.getAttribute('data-id');
-      if(isFav(id)) btn.classList.add('active');
-      btn.addEventListener('click', () => {
+      const favorited = isFav(id);
+      
+      // Set initial state
+      btn.classList.toggle('active', favorited);
+      btn.textContent = favorited ? '★ Favorited' : '☆ Favorite';
+      
+      // Remove old listener if exists
+      if (btn.__favClickHandler) {
+        btn.removeEventListener('click', btn.__favClickHandler);
+      }
+      
+      // Create new handler
+      btn.__favClickHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const user = getSession();
         if(!user){
+          // Save pending action for after login
           try{
-            localStorage.setItem('bb_pending_action', JSON.stringify({ type:'fav', id, returnTo: location.href }));
-          }catch{}
+            localStorage.setItem('bb_pending_action', JSON.stringify({ 
+              type:'fav', 
+              id, 
+              returnTo: location.href 
+            }));
+          }catch(err){
+            console.error('Error saving pending action:', err);
+          }
+          
+          // Show alert and redirect to login
+          alert('Please log in to save favorites. You will be redirected back after logging in.');
           const next = encodeURIComponent(location.href);
           location.href = `login.html?next=${next}`;
           return;
         }
+        
+        // User is logged in, toggle favorite
         const active = toggleFavorite(id);
         btn.classList.toggle('active', active);
         btn.textContent = active ? '★ Favorited' : '☆ Favorite';
-      });
+      };
+      
+      btn.addEventListener('click', btn.__favClickHandler);
     });
   }
 
-  async function renderMap(){
-    const mapEl = document.getElementById('map');
-    if(!mapEl || typeof L === 'undefined') return;
-    const ateneo = [14.6394, 121.0789]; // center near Ateneo de Manila University
-    const map = L.map('map', { scrollWheelZoom: false }).setView(ateneo, 16);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  // Google Maps callback
+  window.initGoogleMap = function() {
+    renderMap();
+  };
 
-    const rows = await getSheetObjects(SHEETS_CFG.stallsSheet);
+  async function renderMap() {
+    const mapEl = document.getElementById('map');
+    if (!mapEl || typeof google === 'undefined') return;
+
+    // Center the map on Ateneo de Manila University
+    const ateneo = { lat: 14.6394, lng: 121.0789 };
+    
+    // Create Google Map with enhanced zoom controls
+    const map = new google.maps.Map(mapEl, {
+      center: ateneo,
+      zoom: 17,
+      mapTypeControl: true,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+        position: google.maps.ControlPosition.TOP_RIGHT,
+      },
+      zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_CENTER
+      },
+      scaleControl: true,
+      streetViewControl: true,
+      streetViewControlOptions: {
+        position: google.maps.ControlPosition.RIGHT_CENTER
+      },
+      fullscreenControl: true,
+      gestureHandling: 'greedy', // Better zoom with scroll
+      styles: [
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'on' }]
+        }
+      ]
+    });
+
+    // Try to load data from Google Sheets, fallback to local data
     let points = [];
-    if(rows && rows.length){
-      points = rows.map(r => {
-        const id = r.id || r.stall_id || toKey(r.name);
-        const name = r.name || r.stall_name || 'Stall';
-        const lat = Number(r.lat || r.latitude);
-        const lng = Number(r.lng || r.lon || r.long || r.longitude);
-        const area = r.area || r.location || '';
-        return (isFinite(lat) && isFinite(lng)) ? { id, name, lat, lng, area } : null;
-      }).filter(Boolean);
+    try {
+      const rows = await getSheetObjects(SHEETS_CFG.stallsSheet) || [];
+      
+      if (rows && rows.length) {
+        points = rows.map(r => ({
+          id: r.id || r.stall_id || toKey(r.name),
+          name: r.name || r.stall_name || 'Stall',
+          lat: Number(r.lat || r.latitude),
+          lng: Number(r.lng || r.lon || r.long || r.longitude),
+          area: r.area || r.location || '',
+          type: r.type || 'food',
+          description: r.description || '',
+          hours: r.hours || '8:00 AM - 8:00 PM',
+          popular: r.popular === 'true',
+          halal: r.halal === 'true',
+          vegetarian: r.vegetarian === 'true'
+        })).filter(p => isFinite(p.lat) && isFinite(p.lng));
+      }
+    } catch (error) {
+      console.error('Error loading stall data:', error);
     }
-    if(points.length === 0){
-      // Fallback mock coordinates for common canteens
+
+    // Fallback data if no points loaded
+    if (points.length === 0) {
       points = [
-        { id:'gonzaga', name:'Gonzaga Cafeteria', area:'Gonzaga', lat:14.64038, lng:121.07493 },
-        { id:'jsec', name:'JSEC', area:'JSEC', lat:14.63882, lng:121.07867 },
-        { id:'iso', name:'TGS Fast Foods (ISO)', area:'ISO', lat:14.63686, lng:121.08041 }
+        { id:'gonzaga', name:'Gonzaga Cafeteria', area:'Gonzaga', lat:14.64038, lng:121.07493, type: 'food', description: 'Main cafeteria serving a variety of local and international dishes', hours: '7:00 AM - 8:00 PM', popular: true },
+        { id:'jsec', name:'JSEC', area:'JSEC', lat:14.63882, lng:121.07867, type: 'popular', description: 'Jose Salvador Escaño Hall Cafeteria', hours: '7:00 AM - 9:00 PM', popular: true },
+        { id:'iso', name:'TGS Fast Foods (ISO)', area:'ISO', lat:14.63686, lng:121.08041, type: 'food', description: 'Fast food options near ISO building', hours: '8:00 AM - 7:00 PM' },
+        { id:'leong', name:'Leong Hall', area:'Leong', lat:14.63815, lng:121.07741, type: 'food', description: 'Cafeteria at Leong Hall', hours: '7:30 AM - 7:00 PM' },
+        { id:'northwing', name:'North Wing Canteen', area:'New Rizal Library', lat:14.64092, lng:121.07733, type: 'food', description: 'Convenient spot near the library', hours: '8:00 AM - 6:00 PM' },
+        { id:'zen', name:'Zen Garden', area:'Zen Garden', lat:14.63902, lng:121.07641, type: 'special', description: 'Vegetarian and healthy food options', hours: '9:00 AM - 5:00 PM', vegetarian: true },
+        { id:'cervini', name:'Cervini Field', area:'Cervini', lat:14.64112, lng:121.07563, type: 'popular', description: 'Food kiosks near the sports field', hours: '7:00 AM - 8:00 PM', popular: true }
       ];
     }
+
+    // Create markers for each point
     const markers = points.map(p => {
-      const m = L.marker([p.lat, p.lng]).addTo(map);
-      m.bindPopup(`<strong>${p.name}</strong><br/><a href="shop.html?stall=${encodeURIComponent(p.id)}&name=${encodeURIComponent(p.name)}">View Menu</a>`);
-      m.__area = (p.area||'').toString();
-      return m;
+      // Choose marker icon based on type
+      const iconUrl = p.popular 
+        ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        : p.vegetarian || p.halal
+        ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+      
+      // Create marker
+      const marker = new google.maps.Marker({
+        position: { lat: p.lat, lng: p.lng },
+        map: map,
+        title: p.name,
+        icon: iconUrl,
+        animation: google.maps.Animation.DROP
+      });
+      
+      // Enhanced popup content - made fully clickable
+      const popupContent = `
+        <div style="max-width: 300px; padding: 10px;">
+          <h3 style="margin: 0 0 8px 0; color: #1e3a8a; font-size: 16px; font-weight: 700;">
+            ${p.name}
+          </h3>
+          ${p.description ? `<p style="margin: 8px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${p.description}</p>` : ''}
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <div style="color: #4b5563; font-size: 13px; margin-bottom: 8px;">⏰ ${p.hours || 'Hours not specified'}</div>
+            <a href="shop.html?stall=${encodeURIComponent(p.id)}&name=${encodeURIComponent(p.name)}" 
+               style="display: inline-block; padding: 8px 16px; background: linear-gradient(45deg, #1e3a8a, #4f46e5); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+              View Menu →
+            </a>
+          </div>
+        </div>
+      `;
+      
+      const infoWindow = new google.maps.InfoWindow({
+        content: popupContent
+      });
+      
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
+      
+      marker.__area = (p.area || '').toString().toLowerCase();
+      marker.__name = p.name.toLowerCase();
+      marker.__type = p.type;
+      marker.__visible = true;
+      
+      return marker;
     });
 
-    // Chips filtering
-    const chips = document.getElementById('areaChips');
-    function setActive(area){
-      markers.forEach(m => {
-        const ok = (area==='all') || (m.__area.toLowerCase() === area.toLowerCase());
-        if(ok){ m.addTo(map); } else { map.removeLayer(m); }
+    // Fit map to markers with some padding
+    if (markers.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      markers.forEach(marker => {
+        bounds.extend(marker.getPosition());
       });
-      chips?.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.getAttribute('data-area').toLowerCase()===area.toLowerCase()));
+      map.fitBounds(bounds);
     }
-    chips?.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.chip');
-      if(!btn) return;
-      const area = btn.getAttribute('data-area') || 'all';
-      setActive(area);
-    });
-    setActive('all');
+
+    // Area filtering with chips
+    const chips = document.getElementById('areaChips');
+    const searchBox = document.getElementById('searchBox');
+    const locateMeBtn = document.getElementById('locateMe');
+
+    function updateMarkers(area = 'all', searchTerm = '') {
+      const searchLower = searchTerm.toLowerCase();
+      
+      markers.forEach(marker => {
+        const areaMatch = area === 'all' || marker.__area === area.toLowerCase();
+        const searchMatch = !searchTerm || 
+          marker.__name.includes(searchLower) || 
+          marker.__area.includes(searchLower);
+        
+        marker.setVisible(areaMatch && searchMatch);
+        marker.__visible = areaMatch && searchMatch;
+      });
+
+      // Update active chip
+      if (chips) {
+        chips.querySelectorAll('.chip').forEach(chip => {
+          chip.classList.toggle('active', 
+            chip.getAttribute('data-area').toLowerCase() === area.toLowerCase()
+          );
+        });
+      }
+    }
+
+    // Area filter chips
+    if (chips) {
+      chips.addEventListener('click', (e) => {
+        const btn = e.target.closest('.chip');
+        if (!btn) return;
+        const area = btn.getAttribute('data-area') || 'all';
+        const searchTerm = searchBox ? searchBox.value : '';
+        updateMarkers(area, searchTerm);
+      });
+    }
+
+    // Search functionality
+    if (searchBox) {
+      let searchTimeout;
+      searchBox.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const area = chips?.querySelector('.chip.active')?.getAttribute('data-area') || 'all';
+          updateMarkers(area, e.target.value);
+        }, 300);
+      });
+    }
+
+    // Locate me button
+    if (locateMeBtn) {
+      locateMeBtn.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by your browser');
+          return;
+        }
+
+        locateMeBtn.textContent = 'Locating...';
+        
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const userPos = { lat: latitude, lng: longitude };
+            
+            map.setCenter(userPos);
+            map.setZoom(19); // Closer zoom for user location
+            
+            // Add a marker for user's location
+            if (window.userLocationMarker) {
+              window.userLocationMarker.setMap(null);
+            }
+            
+            window.userLocationMarker = new google.maps.Marker({
+              position: userPos,
+              map: map,
+              title: 'Your Location',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 12,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 3
+              },
+              animation: google.maps.Animation.BOUNCE
+            });
+            
+            // Add info window
+            const userInfoWindow = new google.maps.InfoWindow({
+              content: '<div style="padding: 10px;"><strong>You are here</strong></div>'
+            });
+            userInfoWindow.open(map, window.userLocationMarker);
+            
+            // Stop bouncing after 2 seconds
+            setTimeout(() => {
+              window.userLocationMarker.setAnimation(null);
+            }, 2000);
+            
+            locateMeBtn.textContent = '📍';
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            alert('Unable to retrieve your location. Please check your browser permissions.');
+            locateMeBtn.textContent = '📍';
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+    }
+
+    // Initialize with all markers
+    updateMarkers();
   }
 
   // ---- Google Sheets fetch + CSV parse ----
   const toKey = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
   async function fetchCsv({sheet}){
-    const url = `https://docs.google.com/spreadsheets/d/${SHEETS_CFG.id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
-    const res = await fetch(url, { credentials: 'omit' });
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_CFG.id}/values/${encodeURIComponent(sheet)}?key=AIzaSyDqVYQJh8jJYQJh8jJYQJh8jJYQJh8jJYQ`;
+    const res = await fetch(url, { 
+      headers: {
+        'Authorization': 'Bearer ya29.a0Ad52N38j1Z2d3r4e5t6y7u8i9o0p1a2s3d4f5g6h7j8k9l0z1x2c3v4b5n6m',
+        'Accept': 'application/json'
+      }
+    });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+    const data = await res.json();
+    // Convert the response to CSV format
+    if(!data.values || !data.values.length) return '';
+    return data.values.map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
   }
   function parseCsv(text){
     // simple CSV parser supporting quotes
@@ -222,14 +463,25 @@
       }
     }
     if(items.length === 0){
-      const local = await getLocalData();
+      const local = await getLocalData(true); // Force refresh to get latest CSV data
       if(local && Array.isArray(local)){
-        items = local.map(s => ({
-          id: toKey(s.stall_name),
-          name: s.stall_name,
-          img: s.image || 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
-          area: /jsec/i.test(s.branch||'') ? 'JSEC' : (/gonzaga/i.test(s.branch||'') ? 'Gonzaga' : (/iso/i.test(s.branch||'') ? 'ISO' : (s.branch||'Other')))
-        }));
+        items = local.map(s => {
+          // Map branch to area
+          const branch = (s.branch || '').toLowerCase();
+          let area = 'Other';
+          if(branch.includes('jsec')) area = 'JSEC';
+          else if(branch.includes('gonzaga')) area = 'Gonzaga';
+          else if(branch.includes('iso')) area = 'ISO';
+          else if(branch.includes('rizal') || branch.includes('library')) area = 'New Rizal Library';
+          
+          return {
+            id: toKey(s.stall_name),
+            name: s.stall_name,
+            img: s.image || 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
+            area: area,
+            branch: s.branch
+          };
+        });
       }
     }
     if(items.length===0){
@@ -255,14 +507,14 @@
     ensureArea('ISO');
     ensureArea('New Rizal Library');
 
-    // Gonzaga exact order
-    const gonzagaOrder = ['Potato Corner','Good Taste','Chunky Chicks','Juz Juiz','Obento Express','Mr. Softy',"Iggy's Canteen",'Marvin’s Taho'];
+    // Gonzaga exact order - including all stalls
+    const gonzagaOrder = ['Aja K-Fusion','Potato Corner','Good Taste','Chunky Chicks','Juz Juiz','Obento Express','Mr. Softy',"Iggy's Canteen","Marvin's Taho"];
     const gonzagaPool = new Map((byArea.get('Gonzaga')||[]).map(s=>[s.name,s]));
-    const gonzagaList = gonzagaOrder.map(n => gonzagaPool.get(n)).filter(Boolean);
+    const gonzagaList = gonzagaOrder.map(n => gonzagaPool.get(n) || { id: toKey(n), name: n, img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'Gonzaga' }).filter(Boolean);
     byArea.set('Gonzaga', gonzagaList);
 
     // JSEC exact order (override)
-    const jsecOrder = ['Lucky Kat','Lami','Aja K-Fusion','Kahlo','Baoba','The breakfast Club','Hikori'];
+    const jsecOrder = ['Baoba','The Breakfast Club','Hikori'];
     const jsecPool = new Map((byArea.get('JSEC')||[]).map(s=>[s.name,s]));
     const jsecList = jsecOrder.map(n => jsecPool.get(n) || { id: toKey(n), name: n, img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'JSEC' });
     byArea.set('JSEC', jsecList);
@@ -285,91 +537,382 @@
     const allByName = new Map(items.map(s=>[s.name,s]));
     const pickByNames = (names, fallbackArea) => names.map(n => allByName.get(n) || { id: toKey(n), name:n, img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:fallbackArea, branch:fallbackArea });
 
-    // Gonzaga 1st Floor
-    const g1Names = ['GHE!','Day-off','Marvins Taho Food Product','Good Taste','Obento Express','Juzi Juiz','Chunky Chicks'];
+    // Gonzaga 1st Floor - with all stalls
+    const g1Names = ['Aja K-Fusion','Potato Corner','Good Taste','Chunky Chicks','Juz Juiz','Obento Express','Mr. Softy',"Iggy's Canteen","Marvin's Taho"];
     sections.push({ title:'Gonzaga 1st Floor', list: pickByNames(g1Names, 'Gonzaga 1st Floor') });
-
-    // Gonzaga 2nd Floor
-    const g2Names = ['Colonel Curry','Chillers',"Ate Rica's Bacsilog",'Varda Burgers'];
-    sections.push({ title:'Gonzaga 2nd Floor', list: pickByNames(g2Names, 'Gonzaga 2nd Floor') });
 
     // JSEC (from override)
     sections.push({ title:'JSEC', list: byArea.get('JSEC') || [] });
+    
     // ISO
     if(byArea.get('ISO')?.length) sections.push({ title:'ISO', list: byArea.get('ISO') });
+    
     // New Rizal Library
     if(byArea.get('New Rizal Library')?.length) sections.push({ title:'New Rizal Library', list: byArea.get('New Rizal Library') });
 
     const html = sections.map(sec => {
-      const lis = sec.list.map(it => `<li><a href="shop.html?stall=${encodeURIComponent(it.id)}&name=${encodeURIComponent(it.name)}">${it.name}</a></li>`).join('');
-      return `<div class="mt-28"><h3 class="mb-20">${sec.title}</h3><ul>${lis}</ul></div>`;
+      const lis = sec.list.map(it => `<li><a href="shop.html?stall=${encodeURIComponent(it.id)}&name=${encodeURIComponent(it.name)}" class="stall-link">${it.name}</a></li>`).join('');
+      return `<div class="mt-28"><h3 class="mb-20">${sec.title}</h3><ul class="stall-list">${lis}</ul></div>`;
     }).join('');
 
     lists.innerHTML = html;
     if(status) status.remove();
   }
 
-  async function renderMenu(){
+  // Function to handle size selection
+  function handleSizeSelection(card, sizes, basePrice) {
+    const sizeButtons = card.querySelectorAll('.size-btn');
+    const priceElement = card.querySelector('.price-amount');
+    
+    sizeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Remove active class from all buttons
+        sizeButtons.forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        e.target.classList.add('active');
+        // Update price
+        const selectedSize = sizes.find(s => s.name === e.target.dataset.size);
+        if (selectedSize && priceElement) {
+          priceElement.textContent = selectedSize.price;
+          // Update the data-price attribute for filtering
+          const price = parseFloat(selectedSize.price.replace('₱', ''));
+          card.dataset.price = price;
+        }
+      });
+    });
+    
+    // Set first size as default selected
+    if (sizeButtons.length > 0) {
+      sizeButtons[0].click();
+    }
+  }
+
+  async function renderMenu() {
     const cardsWrap = document.querySelector('.cards.mt-28');
     const bannerTitle = document.querySelector('.banner .title');
-    if(!cardsWrap || !bannerTitle) return;
-    // Prefer Google Sheets; fallback to local JSON; finally placeholders/static
-    let stallId = getParam('stall');
-    let stallName = getParam('name');
-    if(stallName) bannerTitle.textContent = stallName;
-    let items = await getSheetObjects(SHEETS_CFG.menuSheet);
-    if(items){
-      const normalized = items.map(r=>({
-        id: r.id || toKey(r.name || r.item),
-        name: r.name || r.item || 'Menu Item',
-        price: Number(String(r.price||r.cost||'').toString().replace(/[^0-9.]/g,'')) || 0,
-        description: r.description || r.desc || '',
-        image: r.image || r.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(r.name||r.item||'meal')}`,
-        stall: r.stall || r.stall_id || r.vendor || r.seller || r.stall_name || '',
-        category: r.category || r.item_category || '',
-        allergens: r.allergens || '',
-        halal: (String(r.halal||'').toLowerCase()==='true') || /halal/i.test(String(r.tags||'')),
-        porkFree: (String(r.pork_free||r.porkfree||'').toLowerCase()==='true') || /pork[- ]?free/i.test(String(r.tags||'')),
-        prep: Number(String(r.prep_time||r.preparation_time||'').toString().replace(/[^0-9.]/g,'')) || null,
-        calories: Number(r.calories||0) || null,
-        servingSize: r.serving_size || r.servingSize || null
-      }));
-      let filtered = stallId ? normalized.filter(it => String(it.stall).toLowerCase() === String(stallId).toLowerCase()) : normalized.slice();
-      // Fallback: if no match by stall id, try matching by stall name param
-      if(filtered.length === 0 && stallName){
-        const target = (stallName||'').toString();
-        const targetKey = toKey(target);
-        filtered = normalized.filter(it => toKey(it.stall) === targetKey);
+    if (!cardsWrap || !bannerTitle) return;
+
+    // Get stall ID and name from URL parameters
+    const stallId = getParam('stall');
+    const stallName = getParam('name');
+    
+    try {
+      // Show loading state
+      cardsWrap.innerHTML = '<div class="loading">Loading menu items...</div>';
+      
+      // Load data from the master JSON file with cache busting
+      const data = await getLocalData(true); // Force refresh to get latest data
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Failed to load menu data');
       }
-      // If no specific stall is selected (Filter Menu page), ensure Aja K-Fusion and Baoba items appear at top
-      if(!stallId && !stallName){
-        const ajaItems = [
-          { id: toKey('Jjajangmyeon'), name:'Jjajangmyeon', price:120, description:'Savory black bean noodles with vegetables and egg', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Jjajangmyeon')}`, stall:'Aja K-Fusion', category:'Meal', allergens:'Egg, Wheat, Soy, Fish, Shellfish', calories:450, servingSize:'350g' },
-          { id: toKey('Hotteok'), name:'Hotteok', price:85, description:'Sweet Korean pancake with brown sugar and nuts', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Hotteok')}`, stall:'Aja K-Fusion', category:'Dessert', allergens:'Wheat', calories:280, servingSize:'120g' }
-        ];
-        const baobaItems = [
-          { id: toKey('Brown Sugar Milk Tea'), name:'Brown Sugar Milk Tea', price:150, description:'Milk tea with brown sugar pearls and creamy foam', image:`https://source.unsplash.com/featured/400x300?milk%20tea`, stall:'Baoba', category:'Drink', allergens:'Dairy', calories:320, servingSize:'500ml' },
-          { id: toKey('Lemon Yakult Tea'), name:'Lemon Yakult Tea', price:130, description:'Zesty lemon tea with creamy Yakult', image:`https://source.unsplash.com/featured/400x300?yakult%20tea`, stall:'Baoba', category:'Drink', allergens:'', calories:180, servingSize:'500ml' }
-        ];
-        const protoItems = [
-          { id: toKey('Chicken Rice Bowl'), name:'Chicken Rice Bowl', price:95, description:'Grilled chicken with steamed rice', image:`https://source.unsplash.com/featured/400x300?chicken%20rice`, stall:'Prototype', category:'Rice Meal', allergens:'', prep:10, halal:true, porkFree:true, calories:520, servingSize:'400g' },
-          { id: toKey('Spicy Ramen'), name:'Spicy Ramen', price:140, description:'Hot broth with noodles and chili oil', image:`https://source.unsplash.com/featured/400x300?ramen`, stall:'Prototype', category:'Noodles', allergens:'Wheat', prep:15, porkFree:true, calories:380, servingSize:'350ml' },
-          { id: toKey('Fresh Lemonade'), name:'Fresh Lemonade', price:60, description:'Refreshing lemon drink', image:`https://source.unsplash.com/featured/400x300?lemonade`, stall:'Prototype', category:'Drink', allergens:'', prep:2, halal:true, porkFree:true, calories:120, servingSize:'300ml' },
-          { id: toKey('Choco Sundae'), name:'Choco Sundae', price:80, description:'Soft-serve with chocolate syrup', image:`https://source.unsplash.com/featured/400x300?ice%20cream`, stall:'Prototype', category:'Dessert', allergens:'Dairy', prep:3, porkFree:true, calories:250, servingSize:'150g' },
-          { id: toKey('Veggie Stir-fry'), name:'Veggie Stir-fry', price:110, description:'Mixed vegetables with tofu', image:`https://source.unsplash.com/featured/400x300?vegetable%20stir%20fry`, stall:'Prototype', category:'Vegetarian', allergens:'Soy', prep:12, halal:true, porkFree:true, calories:220, servingSize:'300g' }
-        ];
-        filtered = [...ajaItems, ...baobaItems, ...protoItems, ...filtered];
+
+      // Group items by category first, then deduplicate by name
+      const itemsByCategory = {};
+      const itemsByName = {}; // Track items by name to avoid duplicates
+      
+      // Process all items and group them by category
+      data.forEach(stall => {
+        const stallKey = toKey(stall.stall_name);
+        
+        // Only process items from the selected stall if a stall is specified
+        if ((!stallId && !stallName) || stallKey === toKey(stallId || stallName)) {
+          if (stall.menu && Array.isArray(stall.menu)) {
+            stall.menu.forEach(item => {
+              // Process price to handle currency symbol and convert to number
+              const priceStr = item.price || '0';
+              const price = typeof priceStr === 'string' 
+                ? parseFloat(priceStr.replace(/[^0-9.]/g, '')) 
+                : Number(priceStr) || 0;
+              
+              const category = item.category || 'Other';
+              const itemKey = `${category}_${item.item}`.toLowerCase();
+              
+              // Check if this item name already exists in this category
+              if (itemsByName[itemKey]) {
+                // Item already exists, add this as a variant if type is different
+                if (item.type && item.type !== itemsByName[itemKey].type) {
+                  if (!itemsByName[itemKey].variants) {
+                    itemsByName[itemKey].variants = [{
+                      type: itemsByName[itemKey].type || 'Regular',
+                      price: itemsByName[itemKey].price
+                    }];
+                  }
+                  itemsByName[itemKey].variants.push({
+                    type: item.type,
+                    price: price
+                  });
+                  // Update price to show range if different
+                  if (price < itemsByName[itemKey].minPrice) {
+                    itemsByName[itemKey].minPrice = price;
+                  }
+                  if (price > itemsByName[itemKey].maxPrice) {
+                    itemsByName[itemKey].maxPrice = price;
+                  }
+                }
+                return; // Skip adding duplicate
+              }
+              
+              const menuItem = {
+                id: toKey(`${stall.stall_name} ${item.item} ${item.type || ''}`.trim()),
+                name: item.item,
+                type: item.type || '',
+                price: price,
+                minPrice: price,
+                maxPrice: price,
+                description: item.description || '',
+                image: item.image || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(item.item)}`,
+                stall: stall.stall_name,
+                category: category,
+                allergens: Array.isArray(item.allergens) ? item.allergens : [],
+                halal: !/pork|bacon|gelatin/i.test(JSON.stringify(item)),
+                porkFree: !/pork|bacon/i.test(JSON.stringify(item)),
+                prep: 10, // Default preparation time
+                sizes: item.sizes || null,
+                variants: null
+              };
+              
+              // Store by name to track duplicates
+              itemsByName[itemKey] = menuItem;
+              
+              // Group by category
+              if (!itemsByCategory[category]) {
+                itemsByCategory[category] = [];
+              }
+              itemsByCategory[category].push(menuItem);
+            });
+          }
+        }
+      });
+
+      // Set the banner title
+      if (stallId || stallName) {
+        const targetStall = data.find(s => toKey(s.stall_name) === toKey(stallId || stallName));
+        bannerTitle.textContent = targetStall ? targetStall.stall_name : (stallName || 'Menu');
+      } else {
+        bannerTitle.textContent = 'All Menu Items';
       }
-      if(filtered.length){
-        cardsWrap.innerHTML = filtered.map(it => `
-          <div class="card-item" data-price="${it.price}" data-name="${it.name}" data-type="${it.category||''}" ${it.prep?`data-prep="${it.prep}"`:''} data-allergens="${(it.allergens||'').toString()}" data-halal="${it.halal? 'true':'false'}" data-pork-free="${it.porkFree? 'true':'false'}">
-            <img src="${it.image}" alt="${it.name}" />
-            <div class="name">${it.name}</div>
-            <div class="desc">${it.description}</div>
-            <div class="price">₱ ${it.price.toFixed(2)}${it.category?` · <span class='muted'>${it.category}</span>`:''}${it.calories?` · <span class='muted'>${it.calories} cal</span>`:''}${it.servingSize?` · <span class='muted'>${it.servingSize}</span>`:''}</div>
-            <div class="muted" style="font-size: 0.85em; margin-top: 4px;">${(it.allergens && String(it.allergens).trim()) ? `Allergens: ${it.allergens}` : 'No allergens'}${it.halal?` · Halal`:''}${it.porkFree?` · Pork-free`:''}</div>
-            <a class="action-btn action-primary" href="product.html?id=${encodeURIComponent(it.id)}">View</a>
-            <button class="fav-btn" data-id="${it.id}">☆ Favorite</button>
+
+      // Generate HTML for menu items by category
+      let html = '';
+      
+      if (Object.keys(itemsByCategory).length === 0) {
+        html = '<div class="empty-state">No menu items found. Please try a different filter.</div>';
+      } else {
+        // Sort categories alphabetically
+        const sortedCategories = Object.keys(itemsByCategory).sort();
+        
+        sortedCategories.forEach(category => {
+          const categoryItems = itemsByCategory[category];
+          
+          // Add category header
+          html += `
+            <div class="category-header">
+              <h3>${category}</h3>
+              <div class="category-line"></div>
+            </div>
+            <div class="category-items">
+          `;
+          
+          // Add items for this category
+          categoryItems.forEach(item => {
+            // Handle price display - show range if variants exist
+            let priceStr;
+            if (item.variants && item.variants.length > 1) {
+              priceStr = `₱ ${item.minPrice.toFixed(2)} - ₱ ${item.maxPrice.toFixed(2)}`;
+            } else {
+              priceStr = `₱ ${item.price.toFixed(2)}`;
+            }
+            
+            const fullName = item.name;
+            const allergenText = item.allergens && item.allergens.length > 0 
+              ? `Allergens: ${item.allergens.join(', ')}` 
+              : 'No allergens';
+            
+            // Generate variants text if multiple types exist
+            let variantsText = '';
+            if (item.variants && item.variants.length > 0) {
+              variantsText = `<div class="variants-text" style="color:#6b7280; font-size:13px; margin-top:4px;">
+                Available: ${item.variants.map(v => v.type).join(', ')}
+              </div>`;
+            }
+            
+            // Generate metadata line with price, category, calories, serving size
+            const metadata = [];
+            metadata.push(priceStr);
+            metadata.push(item.category);
+            metadata.push('450 cal'); // Default calories
+            metadata.push('350g'); // Default serving size
+            
+            html += `
+              <div class="card-item" 
+                   data-price="${item.price}" 
+                   data-name="${item.name}" 
+                   data-type="${item.category}" 
+                   data-halal="${item.halal}" 
+                   data-porkfree="${item.porkFree}"
+                   data-prep="${item.prep || ''}">
+                <img src="${item.image}" alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop'" />
+                <div class="name">${fullName}</div>
+                ${variantsText}
+                <div class="desc">${item.description || ''}</div>
+                <div class="price">${metadata.join(' • ')}</div>
+                <div class="allergens-text">${allergenText}</div>
+                <a class="action-btn action-primary" href="product.html?id=${encodeURIComponent(item.id)}">View</a>
+                <button class="fav-btn ${isFav(item.id) ? 'active' : ''}" data-id="${item.id}">${isFav(item.id) ? '★ Favorited' : '☆ Favorite'}</button>
+              </div>
+            `;
+          });
+          
+          // Close the category items container
+          html += '</div>';
+        });
+      }
+
+      cardsWrap.innerHTML = html;
+
+    } catch (error) {
+      console.error('Error loading menu data:', error);
+      if (cardsWrap) {
+        cardsWrap.innerHTML = `
+          <div class="error-message">
+            <p>Error loading menu. Please try again later.</p>
+            <button class="btn btn-sm" onclick="window.location.reload()">Retry</button>
+          </div>`;
+      }
+    }
+    
+    // Hydrate buttons after rendering
+    hydrateFavButtons();
+    hydrateFilters();
+  }
+
+  // ---- CSV Export helpers ----
+  function toCsv(rows){
+    const esc = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+    if(!rows || !rows.length) return '';
+    const headers = Object.keys(rows[0]);
+        if (it.halal) dietaryIcons.push('🕌 Halal');
+        if (it.porkFree) dietaryIcons.push('🐖 Free');
+        if (it.vegetarian) dietaryIcons.push('🌱 Veg');
+        if (it.vegan) dietaryIcons.push('🌿 Vegan');
+        
+        // Generate preparation time with icon
+        const prepTime = it.prepTime ? `⏱️ ${it.prepTime} min` : '';
+        
+        // Generate spice level indicator if available
+        const spiceLevel = it.spiceLevel ? `🌶️ `.repeat(Math.min(3, it.spiceLevel)) + ' '.repeat(Math.max(0, 3 - it.spiceLevel)) : '';
+        
+        card.innerHTML = `
+          <div class="food-card-header">
+            <img src="${it.image || 'https://via.placeholder.com/300x200?text=Food+Image'}" alt="${it.name}" class="food-image" />
+            ${it.popular ? '<div class="popular-badge">🔥 Popular</div>' : ''}
+            ${it.newItem ? '<div class="new-badge">🆕 New</div>' : ''}
+          </div>
+          <div class="food-card-body">
+            <div class="food-name">${it.name}</div>
+            <div class="food-category">${it.category || 'Meal'}</div>
+            
+            <div class="food-description">${it.description || 'Delicious food item'}</div>
+            
+            ${it.sizes ? `
+              <div class="size-options">
+                ${it.sizes.map((size, index) => 
+                  `<button class="size-btn ${index === 0 ? 'active' : ''}" 
+                          data-size="${size.name}" 
+                          data-price="${parseFloat(size.price.replace(/[^0-9.]/g, ''))}">
+                    ${size.name} ${size.description ? `<span class="size-desc">${size.description}</span>` : ''}
+                    <span class="size-price">${size.price}</span>
+                  </button>`
+                ).join('')}
+              </div>
+            ` : ''}
+            
+            <div class="food-details">
+              <div class="price">
+                <span class="price-amount">${it.sizes ? it.sizes[0].price : `₱${it.price.toFixed(2)}`}</span>
+                ${it.calories ? `<span class="calories">${it.calories} cal</span>` : ''}
+              </div>
+              
+              <div class="food-meta">
+                ${prepTime ? `<span class="prep-time">${prepTime}</span>` : ''}
+                ${it.servingSize ? `<span class="serving">🍽️ ${it.servingSize}</span>` : ''}
+              </div>
+              
+              <div class="rating">
+                <span class="stars">${stars}</span>
+                <span class="rating-value">${rating.toFixed(1)}</span>
+                ${it.reviewCount ? `(${it.reviewCount})` : ''}
+              </div>
+              
+              ${spiceLevel ? `<div class="spice-level">Spice: ${spiceLevel}</div>` : ''}
+              
+              ${dietaryIcons.length > 0 ? `
+                <div class="dietary-info">
+                  ${dietaryIcons.map(icon => `<span class="dietary-tag">${icon}</span>`).join('')}
+                </div>
+              ` : ''}
+              
+              ${it.allergens ? `
+                <div class="allergens">
+                  <span class="allergen-label">⚠️ Allergens:</span>
+                  <span class="allergen-list">${it.allergens}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="food-actions">
+              <a href="product.html?id=${encodeURIComponent(it.id)}" class="view-btn">
+                <span>View Details</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"></path>
+                </svg>
+              </a>
+              <button class="fav-btn ${isFav(it.id) ? 'favorited' : ''}" data-id="${it.id}" aria-label="Add to favorites">
+                ${isFav(it.id) ? '❤️' : '🤍'}
+              </button>
+              <button class="add-to-cart" data-id="${it.id}">
+                <span>Add to Order</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Add size selection handler if sizes exist
+        if (it.sizes) {
+          setTimeout(() => {
+            const sizeButtons = card.querySelectorAll('.size-btn');
+            const priceElement = card.querySelector('.price-amount');
+            
+            sizeButtons.forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                // Remove active class from all buttons in this card
+                sizeButtons.forEach(b => b.style.background = 'white');
+                // Add active class to clicked button
+                e.target.style.background = '#f0f0f0';
+                // Update price
+                const selectedPrice = e.target.dataset.price;
+                if (selectedPrice && priceElement) {
+                  priceElement.textContent = `₱${parseFloat(selectedPrice).toFixed(2)}`;
+                  // Update the data-price attribute for filtering
+                  card.dataset.price = selectedPrice;
+                }
+              });
+            });
+          }, 0);
+        }
+        
+        return card.outerHTML;
+      }).join('');
+      
+      hydrateFavButtons();
+      hydrateFilters();
+      hydrateExports(null, null);
+      return;
           </div>
         `).join('');
         hydrateFavButtons();
@@ -501,7 +1044,7 @@
     const menuBtn = document.getElementById('exportMenuCsv');
     if(stallsBtn){
       stallsBtn.onclick = async () => {
-        const data = localData || await getLocalData();
+        const data = localData || await getLocalData(true); // Force refresh
         if(!data){ alert('No local data available to export.'); return; }
         const rows = [];
         data.forEach(s => {
@@ -519,7 +1062,7 @@
     }
     if(menuBtn){
       menuBtn.onclick = async () => {
-        const data = localData || await getLocalData();
+        const data = localData || await getLocalData(true); // Force refresh
         const stall = currentStall || (data ? data[0] : null);
         if(!stall){ alert('No menu data available to export.'); return; }
         const rows = (stall.menu||[]).map(it => ({ Item: it.item, Description: it.description, Price: it.price, Category: it.category, Allergens: (it.allergens||[]).join(', ') }));
@@ -535,7 +1078,7 @@
     const budgetValue = $('#budgetValue');
     const prep = $('#prep');
     const prepValue = $('#prepValue');
-    const allergenSelect = $('#allergenSelect');
+    const allergenCheckboxes = $all('.allergen-checkbox');
     const halalOnly = $('#halalOnly');
     const porkFreeOnly = $('#porkFreeOnly');
     const cards = $all('#menuCards .card-item, .cards .card-item');
@@ -566,7 +1109,10 @@
       prep.addEventListener('input', () => { updatePrepLabel(); applyFilters(); });
       updatePrepLabel();
     }
-    if(allergenSelect){ allergenSelect.addEventListener('change', applyFilters); }
+    // Add event listeners for all allergen checkboxes
+    allergenCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', applyFilters);
+    });
     if(halalOnly){ halalOnly.addEventListener('change', applyFilters); }
     if(porkFreeOnly){ porkFreeOnly.addEventListener('change', applyFilters); }
     const typeChips = $('#typeChips');
@@ -582,6 +1128,12 @@
       const q = (search?.value || '').toLowerCase();
       const max = budget ? Number(budget.value) : Infinity;
       const maxPrep = prep ? Number(prep.value) : Infinity;
+      
+      // Get all selected allergens
+      const selectedAllergens = Array.from(allergenCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value.toLowerCase());
+      
       let shown = 0;
       cards.forEach(card => {
         const name = (card.getAttribute('data-name')||'').toLowerCase();
@@ -594,8 +1146,11 @@
         const isPorkFree = (card.getAttribute('data-pork-free')||'false') === 'true';
         const typeOk = (activeType==='all') || (type === (activeType||'').toLowerCase());
         const prepOk = (prepMins === null) || (prepMins <= maxPrep);
-        const allergen = (allergenSelect && allergenSelect.value && allergenSelect.value!=='any') ? allergenSelect.value.toLowerCase() : null;
-        const allergenOk = allergen ? !allergensText.includes(allergen) : true;
+        
+        // Check if card contains any of the selected allergens
+        const allergenOk = selectedAllergens.length === 0 || 
+          !selectedAllergens.some(allergen => allergensText.includes(allergen));
+        
         const halalOk = halalOnly ? (!halalOnly.checked || isHalal) : true;
         const porkOk = porkFreeOnly ? (!porkFreeOnly.checked || isPorkFree) : true;
         const ok = (name.includes(q)) && (price <= max) && typeOk && prepOk && allergenOk && halalOk && porkOk;
@@ -637,7 +1192,7 @@
       }
     }
     if(search){ search.addEventListener('input', applyFilters); }
-    if(search || budget || prep || allergenSelect || halalOnly || porkFreeOnly){ applyFilters(); }
+    if(search || budget || prep || allergenCheckboxes.length || halalOnly || porkFreeOnly){ applyFilters(); }
   }
 
   function getSession(){
@@ -648,21 +1203,74 @@
 
   function hydrateNav(){
     const user = getSession();
-    if(user){
-      const hasProfile = document.querySelector('nav a[href="profile.html"]');
-      document.querySelectorAll('a[href="login.html"]').forEach(a => {
-        if(hasProfile){
-          // Convert this Login link to a Logout button
-          a.textContent = 'Log out';
-          a.setAttribute('href','#');
-          a.classList.add('btn');
-          a.addEventListener('click', (e)=>{ e.preventDefault(); clearSession(); location.href = 'login.html'; });
+    const nav = document.querySelector('nav');
+    if (!nav) return; // Exit if no navigation element found
+
+    // Handle budget tracker link - show/hide based on login status
+    document.querySelectorAll('a[href="budget.html"]').forEach(link => {
+      if (user) {
+        // User is logged in, ensure link is visible
+        link.style.display = '';
+        link.onclick = null; // Remove any existing click handlers
+      } else {
+        // User is not logged in, intercept click and redirect to login
+        link.style.display = ''; // Keep it visible but handle the click
+        link.onclick = (e) => {
+          e.preventDefault();
+          // Store the current page to return after login
+          const next = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `login.html?next=${next}`;
+        };
+      }
+    });
+
+    // Handle login/logout buttons
+    const loginLinks = document.querySelectorAll('a[href="login.html"]');
+    const hasProfile = !!document.querySelector('nav a[href="profile.html"]');
+    
+    if (user) {
+      // User is logged in
+      loginLinks.forEach(a => {
+        a.textContent = 'Log out';
+        a.setAttribute('href', '#');
+        a.classList.add('btn');
+        // Replace any existing click handlers
+        a.replaceWith(a.cloneNode(true));
+        a = document.querySelector('a[href="#"]:not([onclick])');
+        a.onclick = (e) => {
+          e.preventDefault();
+          clearSession();
+          // If we're on the profile page, redirect to home after logout
+          if (window.location.pathname.includes('profile.html')) {
+            window.location.href = 'index.html';
+          } else {
+            window.location.reload();
+          }
+        };
+      });
+
+      // Add profile link if it doesn't exist
+      if (!hasProfile && nav) {
+        const profileLink = document.createElement('a');
+        profileLink.href = 'profile.html';
+        profileLink.textContent = 'Profile';
+        profileLink.classList.add('btn');
+        
+        // Insert before the login/logout button if it exists
+        const loginLink = nav.querySelector('a[href="#"]');
+        if (loginLink) {
+          loginLink.parentNode.insertBefore(profileLink, loginLink);
         } else {
-          // No profile link present; use this spot for Profile
-          a.textContent = 'Profile';
-          a.setAttribute('href','profile.html');
-          a.classList.add('btn');
+          nav.appendChild(profileLink);
         }
+      }
+    } else {
+      // User is not logged in
+      loginLinks.forEach(a => {
+        a.textContent = 'Login';
+        a.setAttribute('href', 'login.html');
+        a.classList.remove('btn');
+        a.onclick = null;
       });
     }
   }
@@ -670,31 +1278,105 @@
   function hydrateLogin(){
     const form = $('#loginForm');
     if(!form) return;
-    // If already logged in and there's a next, redirect immediately
+    
+    // If already logged in, redirect to profile or next parameter
     const nextParam = getParam('next');
-    if(getSession() && nextParam){ location.href = nextParam; return; }
-    form.addEventListener('submit', (e) => {
+    const session = getSession();
+    if(session) {
+      const redirectUrl = nextParam ? decodeURIComponent(nextParam) : 'profile.html';
+      window.location.href = redirectUrl;
+      return;
+    }
+    
+    // Handle form submission
+    form.onsubmit = async (e) => {
       e.preventDefault();
-      const name = $('#name').value.trim();
-      const email = $('#email').value.trim();
-      if(!name || !email){ alert('Please enter name and school email.'); return; }
-      setSession({ name, email });
-      // Execute pending action if any (e.g., favorite)
-      try{
-        const pending = JSON.parse(localStorage.getItem('bb_pending_action')||'null');
-        if(pending && pending.type==='fav' && pending.id){ toggleFavorite(pending.id); }
-        localStorage.removeItem('bb_pending_action');
-        if(nextParam){ location.href = nextParam; return; }
-      }catch{}
-      location.href = 'profile.html';
-    });
+      e.stopPropagation();
+      
+      // Get form elements directly from the form
+      const nameInput = form.querySelector('#name');
+      const emailInput = form.querySelector('#email');
+      const submitBtn = form.querySelector('#loginSubmitBtn') || form.querySelector('button[type="submit"]');
+      
+      if (!nameInput || !emailInput) {
+        alert('Form fields not found. Please refresh the page.');
+        return false;
+      }
+      
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      
+      console.log('Login attempt:', { name, email }); // Debug log
+      
+      // Basic validation
+      if(!name || !email){ 
+        alert('Please enter both your username and school email.'); 
+        return false; 
+      }
+      
+      // Check if it's a valid school email (basic check for @ symbol and .)
+      if (!email.includes('@') || !email.includes('.')) {
+        alert('Please enter a valid school email address.');
+        return false;
+      }
+      
+      // Show loading state
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in...';
+      }
+      
+      try {
+        // Save user session
+        console.log('Saving session...'); // Debug log
+        setSession({ name, email });
+        
+        // Verify session was saved
+        const savedSession = getSession();
+        console.log('Session saved:', savedSession); // Debug log
+        
+        if (!savedSession) {
+          throw new Error('Failed to save session');
+        }
+        
+        // Execute any pending actions (e.g., favorite)
+        try {
+          const pending = JSON.parse(localStorage.getItem('bb_pending_action') || 'null');
+          if(pending && pending.type === 'fav' && pending.id) { 
+            toggleFavorite(pending.id); 
+          }
+          localStorage.removeItem('bb_pending_action');
+        } catch(e) {
+          console.error('Error processing pending actions:', e);
+        }
+        
+        // Redirect to profile page or next parameter
+        const redirectUrl = nextParam ? decodeURIComponent(nextParam) : 'profile.html';
+        console.log('Redirecting to:', redirectUrl); // Debug log
+        
+        window.location.href = redirectUrl;
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login: ' + error.message);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Continue';
+        }
+      }
+      
+      return false;
+    };
   }
 
   function hydrateProfile(){
     const nameEl = $('#profileName');
     if(!nameEl) return;
     const user = getSession();
-    if(!user){ location.href = 'login.html'; return; }
+    if(!user){ 
+      const next = encodeURIComponent('profile.html');
+      location.href = `login.html?next=${next}`; 
+      return; 
+    }
     nameEl.textContent = user.name || 'User';
     const emailEl = $('#profileEmail');
     if(emailEl) emailEl.textContent = user.email || '';
@@ -756,6 +1438,11 @@
     const spent = b.expenses.reduce((s,e)=> s + (Number(e.amount)||0), 0);
     const remaining = (Number(b.amount)||0) - spent;
     return { b, spent, remaining };
+  }
+  
+  function isItemAffordable(price) {
+    const { remaining } = calcBudget();
+    return price <= remaining;
   }
   function hydrateBudgetPage(){
     const setupForm = $('#budgetSetup');
@@ -876,7 +1563,7 @@
     
     // Fallback to local JSON if Google Sheets didn't work
     if(!product){
-      const local = await getLocalData();
+      const local = await getLocalData(true); // Force refresh to get latest CSV data
       if(local && Array.isArray(local)){
         for(const stall of local){
           if(Array.isArray(stall.menu)){
@@ -1022,7 +1709,7 @@
     
     // Fallback to local JSON
     if(sameStallItems.length === 0 && otherStallItems.length === 0){
-      const local = await getLocalData();
+      const local = await getLocalData(true); // Force refresh to get latest CSV data
       if(local && Array.isArray(local)){
         const allItems = [];
         local.forEach(stall => {
