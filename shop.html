@@ -50,17 +50,29 @@
         <label class="muted">Prep ≤ <span id="prepValue">10</span> min
           <input id="prep" class="range" type="range" min="0" max="20" step="5" value="10" />
         </label>
-        <label class="muted">Exclude Allergen
-          <select id="allergenSelect" class="input" style="min-width:160px;">
-            <option value="any">None</option>
-            <option>Egg</option>
-            <option>Wheat</option>
-            <option>Soy</option>
-            <option>Fish</option>
-            <option>Shellfish</option>
-            <option>Dairy</option>
-          </select>
-        </label>
+        <div class="allergen-filter">
+          <div class="muted" style="font-weight: 600; margin-bottom: 8px;">Exclude Allergens:</div>
+          <div class="allergen-checkboxes">
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="egg" /> Egg
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="wheat" /> Wheat
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="soy" /> Soy
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="fish" /> Fish
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="shellfish" /> Shellfish
+            </label>
+            <label class="muted" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" class="allergen-checkbox" value="dairy" /> Dairy
+            </label>
+          </div>
+        </div>
         <label class="muted"><input type="checkbox" id="halalOnly" /> Halal only</label>
         <label class="muted"><input type="checkbox" id="porkFreeOnly" /> Pork-free only</label>
       </div>

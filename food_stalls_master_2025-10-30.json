@@ -1,26 +1,86 @@
 [
   {
     "stall_name": "Aja K-Fusion",
-    "category": "K-Food",
+    "category": "Korean",
     "branch": "Gonzaga 1st Floor",
     "last_updated": "2025-10-30",
     "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
     "menu": [
       {
         "item": "Jjajangmyeon",
+        "type": "Comfort",
         "description": "Savory black bean noodles with vegetables and egg",
         "price": "₱120",
         "category": "Meal",
-        "allergens": ["Egg", "Wheat", "Soy", "Fish", "Shellfish"],
-        "image": "https://images.unsplash.com/photo-1625940645240-6eefea4f2a3b?q=80&w=1200&auto=format&fit=crop"
+        "allergens": [
+          "Egg",
+          "Wheat",
+          "Soy",
+          "Fish",
+          "Shellfish"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Jjajangmyeon",
+        "type": "Truffled",
+        "description": "Savory black bean noodles with vegetables and egg",
+        "price": "₱150",
+        "category": "Meal",
+        "allergens": [
+          "Egg",
+          "Wheat",
+          "Soy",
+          "Fish",
+          "Shellfish"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "K-sisig",
+        "type": "1-type only ",
+        "description": "Crispy sisig infused with Korean spices and chili for a bold, savory kick. Does not include add-on Egg",
+        "price": "₱130",
+        "category": "Meal",
+        "allergens": [
+          "Egg",
+          "Wheat",
+          "Soy"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
       },
       {
         "item": "Hotteok",
+        "type": "Original",
         "description": "Sweet Korean pancake with brown sugar and nuts",
-        "price": "₱85",
+        "price": "₱50",
         "category": "Dessert",
-        "allergens": ["Wheat"],
-        "image": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=1200&auto=format&fit=crop"
+        "allergens": [
+          "Wheat"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hotteok",
+        "type": "Malt Choco",
+        "description": "Sweet Korean pancake with brown sugar and nuts",
+        "price": "₱50",
+        "category": "Dessert",
+        "allergens": [
+          "Wheat"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hotteok",
+        "type": "Turon",
+        "description": "Sweet Korean pancake with brown sugar and nuts",
+        "price": "₱60",
+        "category": "Dessert",
+        "allergens": [
+          "Wheat"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
       }
     ]
   },
@@ -29,33 +89,775 @@
     "category": "Beverages",
     "branch": "JSEC",
     "last_updated": "2025-10-30",
-    "image": "https://images.unsplash.com/photo-1521305916504-4a1121188589?q=80&w=1200&auto=format&fit=crop",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
     "menu": [
       {
         "item": "Brown Sugar Milk Tea",
+        "type": "Add P20 for chewy boba",
         "description": "Milk tea with brown sugar pearls and creamy foam",
-        "price": "₱150",
+        "price": "₱180",
         "category": "Drink",
-        "allergens": ["Dairy"],
-        "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop"
+        "allergens": [
+          "Dairy"
+        ],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
       },
       {
-        "item": "Lemon Yakult Tea",
-        "description": "Zesty lemon tea with creamy Yakult",
-        "price": "₱130",
+        "item": "Singature Porl Xiao Long Bao! (4pcs)",
+        "type": "",
+        "description": "The Best. Period. Served with Baoba's secret sauce",
+        "price": "₱120",
+        "category": "Dimsums",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Pan Fried Pork Dumplings! (4pcs)",
+        "type": "",
+        "description": "Simple, tasty, and addicting! Served with Baoba's secret sauce",
+        "price": "₱120",
+        "category": "Dimsums",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Original Served with Gravy (Ala Carte)",
+        "description": "Perfectly seasoned with our Baoba's secret blend",
+        "price": "₱140",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Original Served with Gravy with Rice",
+        "description": "Perfectly seasoned with our Baoba's secret blend",
+        "price": "₱160",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Plum Powder (Ala Carte)",
+        "description": "Sweet, tangy and slightly tart",
+        "price": "₱140",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "Plum Powder with Rice",
+        "description": "Sweet, tangy and slightly tart",
+        "price": "₱160",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "BBQ Powder (Ala Carte)",
+        "description": "Smoky, spicy, and irresistibly bold!",
+        "price": "₱140",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chicken Chops",
+        "type": "BBQ Powder with Rice",
+        "description": "Smoky, spicy, and irresistibly bold!",
+        "price": "₱160",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Refreshing Wintermelon Tea",
+        "type": "",
+        "description": "",
+        "price": "₱60",
         "category": "Drink",
         "allergens": [],
-        "image": "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?q=80&w=1200&auto=format&fit=crop"
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
       }
     ]
   },
-  { "stall_name": "Hunger Buster", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Potato Corner", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Good Taste", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Chunky Chicks", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1551782450-17144c3fa706?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Juz Juiz", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1521305916504-4a1121188589?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Obento Express", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Mr. Softy", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Iggy's Canteen", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1447078806655-40579c2520d6?q=80&w=1200&auto=format&fit=crop", "menu": [] },
-  { "stall_name": "Marvin’s Taho", "category": "Snacks", "branch": "Gonzaga 1st Floor", "last_updated": "2025-10-30", "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=1200&auto=format&fit=crop", "menu": [] }
+  {
+    "stall_name": "Hunger Buster",
+    "category": "Snacks",
+    "branch": "New Rizal Library",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Texan BBQ Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, white onions and hickory texas bbq sauce",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Bacon Two Cheese",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, cheese slice and melted cheese",
+        "price": "₱130",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "BLT Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, lettuce, tomator and melted cheese",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Rising Burger",
+        "type": "200g pure beef patty",
+        "description": "Strips of bacon, sunny side up and condiments",
+        "price": "₱110",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Flaming ",
+        "type": "200g pure beef patty",
+        "description": "Chicken skin & Siracha Mayo",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Dying",
+        "type": "200g pure beef patty",
+        "description": "Mushroom & Bacon",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Craving",
+        "type": "200g pure beef patty",
+        "description": "Ketchup, mayo, mustard",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Burning",
+        "type": "200g pure beef patty",
+        "description": "Chili con carne & mayo",
+        "price": "₱120",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Starving",
+        "type": "200g pure beef patty",
+        "description": "BBQ sauce & onions",
+        "price": "₱100",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Craving 2.0",
+        "type": "200g pure beef patty",
+        "description": "Ranch & Jalapeno",
+        "price": "₱100",
+        "category": "Burger",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  },
+  {
+    "stall_name": "Potato Corner",
+    "category": "Snacks",
+    "branch": "Gonzaga 1st Floor",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Cheese Flavors",
+        "type": "Regular",
+        "description": "",
+        "price": "₱39",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Sour Cream ",
+        "type": "Large",
+        "description": "",
+        "price": "₱65",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "BBQ",
+        "type": "Jumbo",
+        "description": "",
+        "price": "₱95",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Sour Cheese",
+        "type": "Mega",
+        "description": "2 Flavors",
+        "price": "₱125",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chili BBQ",
+        "type": "Giga ",
+        "description": "2 Flavors",
+        "price": "₱195",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Chili BBQ",
+        "type": "Tera",
+        "description": "3 Flavors",
+        "price": "₱225",
+        "category": "Snack",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  },
+  {
+    "stall_name": "Silingan Coffee",
+    "category": "Beverages",
+    "branch": "New Rizal Library",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Iced Coffee",
+        "type": "Americano",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Cafe Latte",
+        "description": "",
+        "price": "₱140",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Cappuccino",
+        "description": "",
+        "price": "₱140",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Mocha Latte",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Caramel Macchiato",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Dulce Latte",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Pride Over Iced",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Hazelnut Latte",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Almond Latte",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced Coffee",
+        "type": "Nutella Iced Coffee",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Strawberry",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Blueberry",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Smoothies",
+        "type": "Mango",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Americano",
+        "description": "",
+        "price": "₱110",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Cafe Latte",
+        "description": "",
+        "price": "₱120",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Cappuccino",
+        "description": "",
+        "price": "₱120",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Mocha Latte",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Caramel Macchiato",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Dulce Latte",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Pride Over Iced",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Hazelnut Latte",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Hot Coffee",
+        "type": "Almond Latte",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Iced Matcha",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Matcha",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Iced Choco",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Choco",
+        "description": "",
+        "price": "₱130",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Hot Freedom Tea",
+        "description": "",
+        "price": "₱100",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Horchata",
+        "description": "",
+        "price": "₱150",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Inked Horchata",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Dirty Matcha",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Green Horchata (pandan)",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Matcha Horchata",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "Nutella Horchata",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Non Coffee",
+        "type": "MatchaBerry",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Coffee Based",
+        "type": "Mocha Frappe",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Coffee Based",
+        "type": "Caramel Frappe",
+        "description": "",
+        "price": "₱170",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Matcha Frappe",
+        "description": "",
+        "price": "₱180",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Strawberry Cream",
+        "description": "",
+        "price": "₱180",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Cookies and Cream",
+        "description": "",
+        "price": "₱180",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Frappe Cream Based",
+        "type": "Choco Cream Frappe",
+        "description": "",
+        "price": "₱180",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  },
+  {
+    "stall_name": "The Breakfast Club",
+    "category": "Meals",
+    "branch": "JSEC",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Mochi Waffles & Chicken Karaage",
+        "type": "",
+        "description": "A classic with a Japanese twist. Crunch and chew served with furikake and maple syrup",
+        "price": "₱180",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Breakfast Bibimbap",
+        "type": "",
+        "description": "Our take on a class! Homemade sausage, seasonal veggies pickled onions, gojuchang-base sauce",
+        "price": "₱180",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Jasmine Lemonade",
+        "type": "",
+        "description": "48-hr jasmine cold-brew homemade syrup with freshly squeezed lemonade",
+        "price": "₱70",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  },
+  {
+    "stall_name": "Hikori",
+    "category": "Meals",
+    "branch": "JSEC",
+    "last_updated": "2025-10-30",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+    "menu": [
+      {
+        "item": "Yakitori",
+        "type": "Chicken Skin",
+        "description": "Crispy chicken skin grilled and glazed to perfection with our signature dipping sauce",
+        "price": "₱55",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Yakitori",
+        "type": "Wagyu Gyu-kushi",
+        "description": "Seared and grilled wagyu cubes with fresh shiitake mushrooms",
+        "price": "₱85",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Yakitori",
+        "type": "Salmon",
+        "description": "Grilled, glazed and marinated salmon fillet and belly on a stick",
+        "price": "₱90",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Yakitori",
+        "type": "Chicken Thigh",
+        "description": "Grilled and glazed chicken thighs with fresh onion leeks with our signature dipping sauce",
+        "price": "₱60",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Sides",
+        "type": "Takoyaki",
+        "description": "Golden brown balls of better of octopus and shrimp. Crispy on the outside but soft and creamy in the inside",
+        "price": "₱85",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Sides",
+        "type": "Japanese Rice",
+        "description": "Signature Japanese rice best eatn with multiple sticks",
+        "price": "₱25",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Rice Bowl",
+        "type": "Chicken Thigh Yakitori",
+        "description": "Two skewers glazed with our yakitori sauce and grilled to perfection",
+        "price": "₱145",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Rice Bowl",
+        "type": "Chicken Thigh and skin Yakitori",
+        "description": "One chicken thigh skewer and one chicken skin skewer",
+        "price": "₱140",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Rice Bowl",
+        "type": "Beef Gyudon",
+        "description": "Sukiyaki cut sirloin beef mixed with caramelized onion and topped with roasted sesame",
+        "price": "₱220",
+        "category": "Meal",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Fuji Apple Mochi",
+        "type": "",
+        "description": "Handmade mochi with cinnamon apple cream filling",
+        "price": "₱95",
+        "category": "Dessert",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      },
+      {
+        "item": "Iced salted matcha latte",
+        "type": "",
+        "description": "Ceremonial grade matcha powder mixed with oat milk and a dash of salt flakes",
+        "price": "₱145",
+        "category": "Drink",
+        "allergens": [],
+        "image": "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop"
+      }
+    ]
+  }
 ]
