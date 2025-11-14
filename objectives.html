@@ -10,7 +10,7 @@
   <a id="top"></a>
   <div class="wrapper">
     <header class="header">
-      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
+      <div class="brand"><img class="logo-img" src="./assets/eagle.svg" alt="Blue Bites" /><span>Blue Bites</span></div>
       <nav class="nav">
         <a href="index.html">About</a>
         <a href="map.html">Map</a>
@@ -200,13 +200,110 @@
     </section>
 
     <footer class="footer">
-      <div class="brand"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></div>
-      <div class="actions">
-        <a class="action-btn action-primary" href="index.html">Home</a>
-        <a class="action-btn action-secondary" href="#top">Back to Top</a>
+      <div class="brand"><img class="logo-img" src="./assets/eagle.svg" alt="Blue Bites" /><span>Blue Bites</span></div>
+          <div class="actions" style="margin-top:12px;">
+            <a class="action-btn small action-tertiary" href="objectives.html">Learn more about what Blue Bites aims to achieve</a>
+            <button id="rateBtn" class="action-btn small action-secondary">Rate Blue Bites</button>
+          </div>
+          
+          <div id="ratingContainer" style="display: none; margin-top: 16px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+            <p style="margin-top: 0; margin-bottom: 12px;">How would you rate your experience with Blue Bites?</p>
+            <div class="rating-stars" style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <span class="star" data-rating="1" style="font-size: 24px; cursor: pointer;">☆</span>
+              <span class="star" data-rating="2" style="font-size: 24px; cursor: pointer;">☆</span>
+              <span class="star" data-rating="3" style="font-size: 24px; cursor: pointer;">☆</span>
+              <span class="star" data-rating="4" style="font-size: 24px; cursor: pointer;">☆</span>
+              <span class="star" data-rating="5" style="font-size: 24px; cursor: pointer;">☆</span>
+            </div>
+            <button id="submitRating" class="btn" style="display: none; margin-top: 8px;">Submit Rating</button>
+            <p id="ratingThankYou" style="display: none; color: #10b981; margin: 8px 0 0 0;">Thank you for your feedback!</p>
+          </div>
+            <a class="action-btn action-secondary" href="#top">Back to Top</a>
       </div>
     </footer>
   </div>
   <script src="./script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const rateBtn = document.getElementById('rateBtn');
+      const ratingContainer = document.getElementById('ratingContainer');
+      const stars = document.querySelectorAll('.star');
+      const submitBtn = document.getElementById('submitRating');
+      const thankYouMsg = document.getElementById('ratingThankYou');
+      let selectedRating = 0;
+
+      // Toggle rating container visibility
+      rateBtn.addEventListener('click', function() {
+        const isHidden = ratingContainer.style.display === 'none';
+        ratingContainer.style.display = isHidden ? 'block' : 'none';
+      });
+
+      // Star rating interaction
+      stars.forEach(star => {
+        star.addEventListener('click', function() {
+          const rating = parseInt(this.getAttribute('data-rating'));
+          selectedRating = rating;
+          
+          // Update star display
+          stars.forEach((s, index) => {
+            s.textContent = index < rating ? '★' : '☆';
+            s.style.color = index < rating ? '#f59e0b' : '#000';
+          });
+          
+          // Show submit button
+          submitBtn.style.display = 'inline-block';
+          thankYouMsg.style.display = 'none';
+        });
+
+        // Hover effect
+        star.addEventListener('mouseover', function() {
+          const rating = parseInt(this.getAttribute('data-rating'));
+          stars.forEach((s, index) => {
+            if (index < rating) {
+              s.textContent = '★';
+              s.style.color = '#f59e0b';
+            } else {
+              s.textContent = '☆';
+              s.style.color = '#000';
+            }
+          });
+        });
+
+        // Reset to selected rating on mouseout
+        star.addEventListener('mouseout', function() {
+          stars.forEach((s, index) => {
+            s.textContent = index < selectedRating ? '★' : '☆';
+            s.style.color = index < selectedRating ? '#f59e0b' : '#000';
+          });
+        });
+      });
+
+      // Submit rating
+      submitBtn.addEventListener('click', function() {
+        if (selectedRating > 0) {
+          // Here you would typically send the rating to your server
+          console.log(`User rated: ${selectedRating} stars`);
+          
+          // Show thank you message
+          submitBtn.style.display = 'none';
+          thankYouMsg.style.display = 'block';
+          
+          // Hide the rating container after 2 seconds
+          setTimeout(() => {
+            ratingContainer.style.display = 'none';
+            // Reset after hiding
+            setTimeout(() => {
+              stars.forEach(star => {
+                star.textContent = '☆';
+                star.style.color = '#000';
+              });
+              selectedRating = 0;
+              thankYouMsg.style.display = 'none';
+            }, 500);
+          }, 1500);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

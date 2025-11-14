@@ -128,11 +128,49 @@
 
   // ---- Google Sheets fetch + CSV parse ----
   const toKey = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
-  async function fetchCsv({sheet}){
-    const url = `https://docs.google.com/spreadsheets/d/${SHEETS_CFG.id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
-    const res = await fetch(url, { credentials: 'omit' });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+  async function fetchCsv({sheet}) {
+    try {
+      // Using a CORS proxy to avoid CORS issues
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_CFG.id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
+      
+      // Try with proxy first
+      const response = await fetch(proxyUrl + encodeURIComponent(sheetUrl), {
+        headers: {
+          'Content-Type': 'text/csv;charset=UTF-8'
+        }
+      });
+      
+      if (!response.ok) {
+        // Fallback to direct fetch if proxy fails
+        console.warn('Proxy fetch failed, trying direct fetch');
+        const directResponse = await fetch(sheetUrl, { 
+          mode: 'no-cors',
+          credentials: 'omit' 
+        });
+        
+        if (!directResponse.ok) {
+          throw new Error(`Failed to fetch data: ${directResponse.status}`);
+        }
+        return await directResponse.text();
+      }
+      
+      return await response.text();
+      
+    } catch (error) {
+      console.error('Error fetching sheet data:', error);
+      // Load from local data if available
+      try {
+        const localData = await getLocalData();
+        if (localData) {
+          console.log('Using local data as fallback');
+          return localData;
+        }
+      } catch (e) {
+        console.warn('Could not load local data:', e);
+      }
+      throw error;
+    }
   }
   function parseCsv(text){
     // simple CSV parser supporting quotes
@@ -186,10 +224,14 @@
     const lists = $('#stallsLists');
     if(!lists) return;
     const status = $('#stallsStatus');
+    
     // Prefer Google Sheets; fallback to local JSON
     const normalizeArea = (s) => (/jsec/i.test(s||'')) ? 'JSEC' : ((/gonzaga/i.test(s||'')) ? 'Gonzaga' : ((/iso/i.test(s||'')) ? 'ISO' : 'Other'));
+    
     let items = [];
     let rows = await getSheetObjects(SHEETS_CFG.stallsSheet);
+    
+    // Load and process stall data
     if(rows && rows.length){
       items = rows.map(r=>({
         id: r.id || r.stall_id || toKey(r.name || r.stall_name),
@@ -199,7 +241,8 @@
         branch: (r.branch || r.area || r.location || '').toString()
       }));
     }
-    // If no distinct Stalls sheet, derive from Menu sheet by unique stall_name preserving first occurrence order
+    
+    // If no distinct Stalls sheet, derive from Menu sheet by unique stall_name
     if(items.length === 0){
       const menuRows = await getSheetObjects(SHEETS_CFG.menuSheet);
       if(menuRows && menuRows.length){
@@ -221,6 +264,8 @@
         items = derived;
       }
     }
+    
+    // Fallback to local data if no data loaded yet
     if(items.length === 0){
       const local = await getLocalData();
       if(local && Array.isArray(local)){
@@ -232,7 +277,9 @@
         }));
       }
     }
-    if(items.length===0){
+    
+    // Final fallback to demo data
+    if(items.length === 0){
       items = [
         { id:'gonzaga', name:'Gonzaga Cafeteria', img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'Gonzaga' },
         { id:'jsec', name:'JSEC', img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'JSEC' },
@@ -240,134 +287,303 @@
       ];
     }
 
-    // Group by area
-    const byArea = new Map();
-    items.forEach(it => {
-      const key = (it.area||'Other').toString();
-      if(!byArea.has(key)) byArea.set(key, []);
-      byArea.get(key).push(it);
+    // Define all the sections with their respective stall names
+    const sections = [
+      {
+        title: 'Gonzaga 1st Floor',
+        names: [
+          'Chunky Chicks', 'Gamja', 'Obento', 'Day Off', 'Melt Station', 
+          'Jamaican Pattie', 'Potato Corner', 'Juzi Juiz', 'Get Bowl\'d', 
+          'GHE!', 'Good Taste'
+        ]
+      },
+      {
+        title: 'Gonzaga 2nd Floor',
+        names: [
+          'Swirlicious!', 'Kcroffles', 'Luckys Shawarma Rice and Wraps', 
+          'Melteese', 'Chillers', 'Colonel\'s Curry', 'Varda', 
+          'Yum Dum Dim', 'Ate Rica\'s Bacsilog'
+        ]
+      },
+      {
+        title: 'JSEC',
+        names: [
+          'Nom Noms', 'Kahlo', 'Tam Pai', 'Namit Gid Ya!', 'Suan Rak', 
+          'Ondo', 'Yatako', 'The Breakfast Club', 'Eagle Eatery', 
+          'Hikori', 'Baoba', 'Mongch', 'Aja! K-Fusion', 'Lami', 
+          'The Middle Feast', 'Hoi An'
+        ]
+      },
+      {
+        title: 'ISO',
+        names: ['TGS Fast Foods (ISO)']
+      },
+      {
+        title: 'New Rizal Library',
+        names: ['Hunger Buster', 'Silingan Coffee']
+      }
+    ];
+
+    // Create a map of all stalls by name for quick lookup
+    const allStallsMap = new Map();
+    items.forEach(stall => {
+      allStallsMap.set(stall.name, stall);
     });
 
-    // Display overrides per user spec
-    const ensureArea = (name)=>{ if(!byArea.has(name)) byArea.set(name, []); };
-    ensureArea('Gonzaga');
-    ensureArea('JSEC');
-    ensureArea('ISO');
-    ensureArea('New Rizal Library');
-
-    // Gonzaga exact order
-    const gonzagaOrder = ['Potato Corner','Good Taste','Chunky Chicks','Juz Juiz','Obento Express','Mr. Softy',"Iggy's Canteen",'Marvin’s Taho'];
-    const gonzagaPool = new Map((byArea.get('Gonzaga')||[]).map(s=>[s.name,s]));
-    const gonzagaList = gonzagaOrder.map(n => gonzagaPool.get(n)).filter(Boolean);
-    byArea.set('Gonzaga', gonzagaList);
-
-    // JSEC exact order (override)
-    const jsecOrder = ['Lucky Kat','Lami','Aja K-Fusion','Kahlo','Baoba','The breakfast Club','Hikori'];
-    const jsecPool = new Map((byArea.get('JSEC')||[]).map(s=>[s.name,s]));
-    const jsecList = jsecOrder.map(n => jsecPool.get(n) || { id: toKey(n), name: n, img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'JSEC' });
-    byArea.set('JSEC', jsecList);
-
-    // New Rizal Library required stalls (create if missing)
-    const nrlNames = ['Hunger Buster','Silingan Coffee'];
-    const nrlExisting = new Map((byArea.get('New Rizal Library')||[]).map(s=>[s.name,s]));
-    const nrlList = nrlNames.map(n => {
-      if(nrlExisting.has(n)) return nrlExisting.get(n);
-      return { id: toKey(n), name: n, img: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:'New Rizal Library' };
+    // Process each section, sort alphabetically, and create the final sections array
+    const processedSections = sections.map(section => {
+      // Get or create stall objects for each name in the section
+      const stalls = section.names
+        .map(name => {
+          if (allStallsMap.has(name)) {
+            return allStallsMap.get(name);
+          }
+          return {
+            id: toKey(name),
+            name: name,
+            img: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
+            area: section.title
+          };
+        })
+        // Sort alphabetically by name
+        .sort((a, b) => a.name.localeCompare(b.name));
+      
+      return {
+        title: section.title,
+        list: stalls
+      };
     });
-    byArea.set('New Rizal Library', nrlList);
 
-    // Fixed area heading order from spec, then any remaining groups like 'Other'
-    const preferredOrder = ['Gonzaga','JSEC','ISO','New Rizal Library'];
-    const remaining = Array.from(byArea.keys()).filter(k => !preferredOrder.includes(k));
-    const areaKeys = preferredOrder.filter(k=>byArea.has(k)).concat(remaining);
-    // Build branch-aware sections per user spec for Gonzaga floors
-    const sections = [];
-    const allByName = new Map(items.map(s=>[s.name,s]));
-    const pickByNames = (names, fallbackArea) => names.map(n => allByName.get(n) || { id: toKey(n), name:n, img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', area:fallbackArea, branch:fallbackArea });
+    // Filter out empty sections
+    const nonEmptySections = processedSections.filter(section => section.list.length > 0);
 
-    // Gonzaga 1st Floor
-    const g1Names = ['GHE!','Day-off','Marvins Taho Food Product','Good Taste','Obento Express','Juzi Juiz','Chunky Chicks'];
-    sections.push({ title:'Gonzaga 1st Floor', list: pickByNames(g1Names, 'Gonzaga 1st Floor') });
-
-    // Gonzaga 2nd Floor
-    const g2Names = ['Colonel Curry','Chillers',"Ate Rica's Bacsilog",'Varda Burgers'];
-    sections.push({ title:'Gonzaga 2nd Floor', list: pickByNames(g2Names, 'Gonzaga 2nd Floor') });
-
-    // JSEC (from override)
-    sections.push({ title:'JSEC', list: byArea.get('JSEC') || [] });
-    // ISO
-    if(byArea.get('ISO')?.length) sections.push({ title:'ISO', list: byArea.get('ISO') });
-    // New Rizal Library
-    if(byArea.get('New Rizal Library')?.length) sections.push({ title:'New Rizal Library', list: byArea.get('New Rizal Library') });
-
-    const html = sections.map(sec => {
-      const lis = sec.list.map(it => `<li><a href="shop.html?stall=${encodeURIComponent(it.id)}&name=${encodeURIComponent(it.name)}">${it.name}</a></li>`).join('');
-      return `<div class="mt-28"><h3 class="mb-20">${sec.title}</h3><ul>${lis}</ul></div>`;
-    }).join('');
-
+    // Render the sections in a two-column layout
+    let html = '<div class="stalls-container">';
+    
+    nonEmptySections.forEach(section => {
+      if (section.list.length === 0) return;
+      
+      html += `
+        <div class="stall-section">
+          <h2>${section.title}</h2>
+          <div class="stall-list">
+      `;
+      
+      section.list.forEach(stall => {
+        const url = `shop.html?stall=${encodeURIComponent(stall.id)}&name=${encodeURIComponent(stall.name)}`;
+        html += `
+          <div class="stall-item">
+            <a href="${url}">
+              <img src="${stall.img}" alt="${stall.name}" />
+              <span>${stall.name}</span>
+            </a>
+          </div>
+        `;
+      });
+      
+      html += `
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    
+    // Update the DOM
     lists.innerHTML = html;
-    if(status) status.remove();
+    if(status) status.textContent = `${items.length} stalls found`;
+    
+      // Update the map with the same data
+    if (window.updateMapMarkers) {
+      updateMapMarkers(items);
+    }
   }
 
-  async function renderMenu(){
+  // Function to update map markers
+  function updateMapMarkers(stalls) {
+    // This function will be called from the map implementation
+    // to update markers when the stalls data is loaded
+    console.log('Stalls data loaded, update map markers here if needed');
+  }
+
+  // Create a menu item card element
+  function createMenuItemCard(item) {
+    if (!item) return '';
+
+    // Generate star rating display
+    const rating = Math.min(5, Math.max(0, parseFloat(item.rating) || 0));
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    let stars = '★'.repeat(fullStars);
+    stars += hasHalfStar ? '½' : '';
+    stars += '☆'.repeat(5 - Math.ceil(rating));
+
+    // Format allergens
+    const allergens = item.allergens ? 
+      String(item.allergens).split(',').map(a => a.trim()).filter(a => a).join(', ') : 
+      'None';
+
+    // Create card HTML
+    return `
+      <div class="card-item" 
+           data-id="${item.id}" 
+           data-name="${item.name.toLowerCase()}" 
+           data-price="${item.price}" 
+           data-type="${(item.category || '').toLowerCase()}" 
+           data-stall="${(item.stall || '').toLowerCase()}" 
+           data-rating="${rating}" 
+           data-prep="${item.prep}" 
+           data-calories="${item.calories || 0}" 
+           data-allergens="${allergens.toLowerCase()}" 
+           data-halal="${item.halal ? 'true' : 'false'}" 
+           data-pork-free="${item.porkFree ? 'true' : 'false'}" 
+           data-vegan="${item.vegan ? 'true' : 'false'}" 
+           data-vegetarian="${item.vegetarian ? 'true' : 'false'}">
+        
+        <div class="card-image">
+          <img src="${item.image}" alt="${item.name}" loading="lazy" />
+          <div class="card-badge">₱${item.price.toFixed(2)}</div>
+          ${item.popular ? '<div class="popular-badge">Popular</div>' : ''}
+        </div>
+        
+        <div class="card-content">
+          <div class="card-header">
+            <h3 class="card-title">${item.name}</h3>
+            <div class="card-rating" title="Rating: ${rating}">
+              <span class="stars">${stars}</span>
+              <span class="rating">${rating.toFixed(1)}</span>
+            </div>
+          </div>
+          
+          <p class="card-desc">${item.description}</p>
+          
+          <div class="card-meta">
+            <span class="meta-item"><i class="icon-time"></i> ${item.prep || 0} min</span>
+            <span class="meta-item"><i class="icon-fire"></i> ${item.calories || 'N/A'} cal</span>
+          </div>
+          
+          <div class="card-footer">
+            <button class="btn-add">+ Add to cart</button>
+            <button class="btn-favorite" data-id="${item.id}">♡</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Show toast notification
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  async function renderMenu() {
     const cardsWrap = document.querySelector('.cards.mt-28');
     const bannerTitle = document.querySelector('.banner .title');
-    if(!cardsWrap || !bannerTitle) return;
-    // Prefer Google Sheets; fallback to local JSON; finally placeholders/static
-    let stallId = getParam('stall');
-    let stallName = getParam('name');
-    if(stallName) bannerTitle.textContent = stallName;
-    let items = await getSheetObjects(SHEETS_CFG.menuSheet);
-    if(items){
-      const normalized = items.map(r=>({
-        id: r.id || toKey(r.name || r.item),
-        name: r.name || r.item || 'Menu Item',
-        price: Number(String(r.price||r.cost||'').toString().replace(/[^0-9.]/g,'')) || 0,
-        description: r.description || r.desc || '',
-        image: r.image || r.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(r.name||r.item||'meal')}`,
-        stall: r.stall || r.stall_id || r.vendor || r.seller || r.stall_name || '',
-        category: r.category || r.item_category || '',
-        allergens: r.allergens || '',
-        halal: (String(r.halal||'').toLowerCase()==='true') || /halal/i.test(String(r.tags||'')),
-        porkFree: (String(r.pork_free||r.porkfree||'').toLowerCase()==='true') || /pork[- ]?free/i.test(String(r.tags||'')),
-        prep: Number(String(r.prep_time||r.preparation_time||'').toString().replace(/[^0-9.]/g,'')) || null,
-        calories: Number(r.calories||0) || null,
-        servingSize: r.serving_size || r.servingSize || null
-      }));
-      let filtered = stallId ? normalized.filter(it => String(it.stall).toLowerCase() === String(stallId).toLowerCase()) : normalized.slice();
-      // Fallback: if no match by stall id, try matching by stall name param
-      if(filtered.length === 0 && stallName){
-        const target = (stallName||'').toString();
-        const targetKey = toKey(target);
-        filtered = normalized.filter(it => toKey(it.stall) === targetKey);
+    if (!cardsWrap || !bannerTitle) return;
+
+    try {
+      // Show loading state
+      cardsWrap.innerHTML = '<div class="loading-message">Loading menu items...</div>';
+
+      // Get stall filter from URL
+      const stallId = getParam('stall');
+      const stallName = getParam('name');
+      if (stallName) bannerTitle.textContent = stallName;
+
+      // Fetch menu items from Google Sheets
+      const items = await getSheetObjects(SHEETS_CFG.menuSheet);
+      
+      if (!items || items.length === 0) {
+        throw new Error('No menu items found in the Google Sheet');
       }
+
+      // Process and normalize items
+      const processedItems = items.map(item => ({
+        id: item.id || toKey(item.name || item.item || ''),
+        name: item.name || item.item || 'Menu Item',
+        price: parseFloat(String(item.price || item.cost || '0').replace(/[^0-9.]/g, '')) || 0,
+        description: item.description || item.desc || '',
+        image: item.image || item.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(item.name || item.item || 'meal')}`,
+        stall: item.stall || item.stall_id || item.vendor || item.seller || item.stall_name || '',
+        category: item.category || item.item_category || '',
+        rating: parseFloat(item.rating || 0),
+        calories: parseInt(item.calories || 0, 10),
+        prep: parseInt(String(item.prep_time || item.preparation_time || '0').replace(/\D/g, ''), 10) || 0,
+        allergens: item.allergens || '',
+        halal: (String(item.halal || '').toLowerCase() === 'true') || /halal/i.test(String(item.tags || '')),
+        porkFree: (String(item.pork_free || item.porkfree || '').toLowerCase() === 'true') || /pork[- ]?free/i.test(String(item.tags || '')),
+        vegan: (String(item.vegan || '').toLowerCase() === 'true') || /vegan/i.test(String(item.tags || '')),
+        vegetarian: (String(item.vegetarian || '').toLowerCase() === 'true') || /vegetarian/i.test(String(item.tags || '')),
+        popular: (String(item.popular || '').toLowerCase() === 'true')
+      }));
+
+      // Filter by stall if specified in URL
+      let filteredItems = processedItems;
+      if (stallId || stallName) {
+        const targetId = (stallId || '').toLowerCase();
+        const targetName = (stallName || '').toLowerCase();
+        filteredItems = processedItems.filter(item => 
+          (stallId && toKey(item.stall) === targetId) ||
+          (stallName && item.stall.toLowerCase().includes(targetName))
+        );
+      }
+
+      // Render cards
+      if (filteredItems.length > 0) {
+        cardsWrap.innerHTML = filteredItems.map(item => createMenuItemCard(item)).join('');
+      } else {
+        cardsWrap.innerHTML = '<div class="muted">No menu items found for this stall.</div>';
+      }
+
+      // Initialize filters and favorites
+      if (typeof hydrateFavButtons === 'function') {
+        hydrateFavButtons();
+      }
+      if (typeof hydrateFilters === 'function') {
+        hydrateFilters();
+      }
+      if (typeof hydrateExports === 'function') {
+        hydrateExports(null, null);
+      }
+
+    } catch (error) {
+      console.error('Error loading menu:', error);
+      cardsWrap.innerHTML = `
+        <div class="error-message">
+          <p>Failed to load menu items. Please try again later.</p>
+          <p><small>Error: ${error.message}</small></p>
+        </div>
+      `;
+    }
       // If no specific stall is selected (Filter Menu page), ensure Aja K-Fusion and Baoba items appear at top
       if(!stallId && !stallName){
         const ajaItems = [
-          { id: toKey('Jjajangmyeon'), name:'Jjajangmyeon', price:120, description:'Savory black bean noodles with vegetables and egg', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Jjajangmyeon')}`, stall:'Aja K-Fusion', category:'Meal', allergens:'Egg, Wheat, Soy, Fish, Shellfish', calories:450, servingSize:'350g' },
-          { id: toKey('Hotteok'), name:'Hotteok', price:85, description:'Sweet Korean pancake with brown sugar and nuts', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Hotteok')}`, stall:'Aja K-Fusion', category:'Dessert', allergens:'Wheat', calories:280, servingSize:'120g' }
+          { id: toKey('Jjajangmyeon'), name:'Jjajangmyeon', price:120, description:'Savory black bean noodles with vegetables and egg', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Jjajangmyeon')}`, stall:'Aja K-Fusion', category:'Meal', allergens:'Egg, Wheat, Soy, Fish, Shellfish' },
+          { id: toKey('Hotteok'), name:'Hotteok', price:85, description:'Sweet Korean pancake with brown sugar and nuts', image:`https://source.unsplash.com/featured/400x300?food,${encodeURIComponent('Hotteok')}`, stall:'Aja K-Fusion', category:'Dessert', allergens:'Wheat' }
         ];
         const baobaItems = [
-          { id: toKey('Brown Sugar Milk Tea'), name:'Brown Sugar Milk Tea', price:150, description:'Milk tea with brown sugar pearls and creamy foam', image:`https://source.unsplash.com/featured/400x300?milk%20tea`, stall:'Baoba', category:'Drink', allergens:'Dairy', calories:320, servingSize:'500ml' },
-          { id: toKey('Lemon Yakult Tea'), name:'Lemon Yakult Tea', price:130, description:'Zesty lemon tea with creamy Yakult', image:`https://source.unsplash.com/featured/400x300?yakult%20tea`, stall:'Baoba', category:'Drink', allergens:'', calories:180, servingSize:'500ml' }
+          { id: toKey('Brown Sugar Milk Tea'), name:'Brown Sugar Milk Tea', price:150, description:'Milk tea with brown sugar pearls and creamy foam', image:`https://source.unsplash.com/featured/400x300?milk%20tea`, stall:'Baoba', category:'Drink', allergens:'Dairy' },
+          { id: toKey('Lemon Yakult Tea'), name:'Lemon Yakult Tea', price:130, description:'Zesty lemon tea with creamy Yakult', image:`https://source.unsplash.com/featured/400x300?yakult%20tea`, stall:'Baoba', category:'Drink', allergens:'' }
         ];
         const protoItems = [
-          { id: toKey('Chicken Rice Bowl'), name:'Chicken Rice Bowl', price:95, description:'Grilled chicken with steamed rice', image:`https://source.unsplash.com/featured/400x300?chicken%20rice`, stall:'Prototype', category:'Rice Meal', allergens:'', prep:10, halal:true, porkFree:true, calories:520, servingSize:'400g' },
-          { id: toKey('Spicy Ramen'), name:'Spicy Ramen', price:140, description:'Hot broth with noodles and chili oil', image:`https://source.unsplash.com/featured/400x300?ramen`, stall:'Prototype', category:'Noodles', allergens:'Wheat', prep:15, porkFree:true, calories:380, servingSize:'350ml' },
-          { id: toKey('Fresh Lemonade'), name:'Fresh Lemonade', price:60, description:'Refreshing lemon drink', image:`https://source.unsplash.com/featured/400x300?lemonade`, stall:'Prototype', category:'Drink', allergens:'', prep:2, halal:true, porkFree:true, calories:120, servingSize:'300ml' },
-          { id: toKey('Choco Sundae'), name:'Choco Sundae', price:80, description:'Soft-serve with chocolate syrup', image:`https://source.unsplash.com/featured/400x300?ice%20cream`, stall:'Prototype', category:'Dessert', allergens:'Dairy', prep:3, porkFree:true, calories:250, servingSize:'150g' },
-          { id: toKey('Veggie Stir-fry'), name:'Veggie Stir-fry', price:110, description:'Mixed vegetables with tofu', image:`https://source.unsplash.com/featured/400x300?vegetable%20stir%20fry`, stall:'Prototype', category:'Vegetarian', allergens:'Soy', prep:12, halal:true, porkFree:true, calories:220, servingSize:'300g' }
+          { id: toKey('Chicken Rice Bowl'), name:'Chicken Rice Bowl', price:95, description:'Grilled chicken with steamed rice', image:`https://source.unsplash.com/featured/400x300?chicken%20rice`, stall:'Prototype', category:'Rice Meal', allergens:'', prep:10, halal:true, porkFree:true },
+          { id: toKey('Spicy Ramen'), name:'Spicy Ramen', price:140, description:'Hot broth with noodles and chili oil', image:`https://source.unsplash.com/featured/400x300?ramen`, stall:'Prototype', category:'Noodles', allergens:'Wheat', prep:15, porkFree:true },
+          { id: toKey('Fresh Lemonade'), name:'Fresh Lemonade', price:60, description:'Refreshing lemon drink', image:`https://source.unsplash.com/featured/400x300?lemonade`, stall:'Prototype', category:'Drink', allergens:'', prep:2, halal:true, porkFree:true },
+          { id: toKey('Choco Sundae'), name:'Choco Sundae', price:80, description:'Soft-serve with chocolate syrup', image:`https://source.unsplash.com/featured/400x300?ice%20cream`, stall:'Prototype', category:'Dessert', allergens:'Dairy', prep:3, porkFree:true },
+          { id: toKey('Veggie Stir-fry'), name:'Veggie Stir-fry', price:110, description:'Mixed vegetables with tofu', image:`https://source.unsplash.com/featured/400x300?vegetable%20stir%20fry`, stall:'Prototype', category:'Vegetarian', allergens:'Soy', prep:12, halal:true, porkFree:true }
         ];
         filtered = [...ajaItems, ...baobaItems, ...protoItems, ...filtered];
       }
       if(filtered.length){
         cardsWrap.innerHTML = filtered.map(it => `
           <div class="card-item" data-price="${it.price}" data-name="${it.name}" data-type="${it.category||''}" ${it.prep?`data-prep="${it.prep}"`:''} data-allergens="${(it.allergens||'').toString()}" data-halal="${it.halal? 'true':'false'}" data-pork-free="${it.porkFree? 'true':'false'}">
-            <img src="${it.image}" alt="${it.name}" />
             <div class="name">${it.name}</div>
             <div class="desc">${it.description}</div>
-            <div class="price">₱ ${it.price.toFixed(2)}${it.category?` · <span class='muted'>${it.category}</span>`:''}${it.calories?` · <span class='muted'>${it.calories} cal</span>`:''}${it.servingSize?` · <span class='muted'>${it.servingSize}</span>`:''}</div>
-            <div class="muted" style="font-size: 0.85em; margin-top: 4px;">${(it.allergens && String(it.allergens).trim()) ? `Allergens: ${it.allergens}` : 'No allergens'}${it.halal?` · Halal`:''}${it.porkFree?` · Pork-free`:''}</div>
+            <div class="price">₱ ${it.price.toFixed(2)}${it.category?` · <span class='muted'>${it.category}</span>`:''} · <span class='muted'>${(it.allergens && String(it.allergens).trim()) ? it.allergens : 'Allergens: None'}</span>${it.halal?` · <span class='muted'>Halal</span>`:''}${it.porkFree?` · <span class='muted'>Pork-free</span>`:''}</div>
             <a class="action-btn action-primary" href="product.html?id=${encodeURIComponent(it.id)}">View</a>
             <button class="fav-btn" data-id="${it.id}">☆ Favorite</button>
           </div>
@@ -431,12 +647,11 @@
         if(list.length){
           cardsWrap.innerHTML = list.map((it) => `
             <div class="card-item" data-price="${Number(String(it.price).replace(/[^0-9.]/g,''))||0}" data-name="${it.item}" data-type="${it.category||''}" ${it.prep?`data-prep="${Number(String(it.prep).replace(/[^0-9.]/g,''))}"`:''} data-allergens="${(Array.isArray(it.allergens)?it.allergens.join(', '): (it.allergens||'')).toString()}" data-halal="${it.halal? 'true':'false'}" data-pork-free="${it.porkFree? 'true':'false'}">
-              <img src="${it.image || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(it.item)}` }" alt="${it.item}" />
               <div class="name">${it.item}</div>
               <div class="desc">${it.description||''}</div>
               <div class="price">${it.price}${it.allergens?` · <span class="muted">${(Array.isArray(it.allergens)?it.allergens.join(', '): it.allergens)}</span>`:''}${it.halal?` · <span class="muted">Halal</span>`:''}${it.porkFree?` · <span class="muted">Pork-free</span>`:''}</div>
-              <a class="action-btn action-primary" href="product.html?id=${encodeURIComponent(toKey(it.item))}">View</a>
-              <button class="fav-btn" data-id="${toKey(it.item)}">☆ Favorite</button>
+              <a class="action-btn action-primary" href="product.html?id=${encodeURIComponent(it.id || toKey(it.item))}">View</a>
+              <button class="fav-btn" data-id="${it.id || toKey(it.item)}">☆ Favorite</button>
             </div>
           `).join('');
           hydrateFavButtons();
@@ -468,7 +683,6 @@
     }
     cardsWrap.innerHTML = filtered2.map(it => `
       <div class="card-item" data-price="${it.price}" data-name="${it.name}">
-        <img src="${it.image}" alt="${it.name}" />
         <div class="name">${it.name}</div>
         <div class="desc">${it.description}</div>
         <div class="price">₱ ${it.price.toFixed(2)}</div>
@@ -531,44 +745,98 @@
   function hydrateFilters(){
     const search = $('#search');
     const budget = $('#budget');
-    const budgetInput = $('#budgetInput');
     const budgetValue = $('#budgetValue');
     const prep = $('#prep');
     const prepValue = $('#prepValue');
     const allergenSelect = $('#allergenSelect');
     const halalOnly = $('#halalOnly');
     const porkFreeOnly = $('#porkFreeOnly');
+    const veganOnly = $('#veganOnly');
+    const vegetarianOnly = $('#vegetarianOnly');
     const cards = $all('#menuCards .card-item, .cards .card-item');
     const container = document.querySelector('.cards.mt-28');
+    const locationChips = $('#locationChips');
+    const stallFilter = $('#stallFilter');
+    const minRatingFilter = $('#minRating');
+    const maxRatingFilter = $('#maxRating');
     let demoEl = null;
-    if(budget){
-      // Sync slider and text input
-      budget.addEventListener('input', () => { 
-        if(budgetInput) budgetInput.value = budget.value;
-        if(budgetValue) budgetValue.textContent = budget.value;
-        applyFilters(); 
-      });
-      if(budgetInput){
-        budgetInput.addEventListener('input', () => {
-          let val = Number(budgetInput.value);
-          // Clamp value between min and max
-          if(val < 50) val = 50;
-          if(val > 500) val = 500;
-          budgetInput.value = val;
-          budget.value = val;
-          if(budgetValue) budgetValue.textContent = val;
-          applyFilters();
-        });
-      }
+    let activeLocation = 'all';
+    let activeStall = 'all';
+    let activeMinRating = 0;
+    let activeMaxRating = 5;
+    if (budget && budgetValue && budgetMin && budgetMax) {
+      // Initial setup
+      budgetMin.value = '0';
+      budgetMax.value = '500';
+      budget.min = '0';
+      budget.max = '500';
+      budget.value = '500';
+      
+      // Function to update the budget display and ensure min/max constraints
+      const updateBudgetDisplay = () => {
+        const min = parseInt(budgetMin.value) || 0;
+        const max = parseInt(budgetMax.value) || 500;
+        const current = parseInt(budget.value) || 0;
+        
+        // Update slider's min/max attributes
+        budget.min = min;
+        budget.max = max;
+        
+        // Ensure current value is within the new range
+        if (current < min) budget.value = min;
+        if (current > max) budget.value = max;
+        
+        budgetValue.textContent = budget.value;
+        
+        // Update the min/max display
+        const rangeDisplay = budget.parentNode.querySelector('.budget-range-display') || 
+                            (() => {
+                              const el = document.createElement('div');
+                              el.className = 'budget-range-display';
+                              budget.parentNode.insertBefore(el, budget.nextSibling);
+                              return el;
+                            })();
+        rangeDisplay.textContent = `₱${min} - ₱${max}`;
+      };
+      
+      // Update and filter function
+      const updateAndFilter = () => {
+        updateBudgetDisplay();
+        applyFilters();
+      };
+      
+      // Update on slider change
+      budget.addEventListener('input', updateAndFilter);
+      
+      // Update on min/max input changes
+      budgetMin.addEventListener('input', updateAndFilter);
+      budgetMax.addEventListener('input', updateAndFilter);
+      
+      // Initial update
+      updateBudgetDisplay();
     }
     if(prep && prepValue){
       const updatePrepLabel = () => prepValue.textContent = prep.value;
       prep.addEventListener('input', () => { updatePrepLabel(); applyFilters(); });
       updatePrepLabel();
     }
-    if(allergenSelect){ allergenSelect.addEventListener('change', applyFilters); }
-    if(halalOnly){ halalOnly.addEventListener('change', applyFilters); }
-    if(porkFreeOnly){ porkFreeOnly.addEventListener('change', applyFilters); }
+    // Get selected allergens from checkboxes
+    function getSelectedAllergens() {
+      const checkboxes = document.querySelectorAll('#allergenOptions input[type="checkbox"]:checked');
+      return Array.from(checkboxes).map(checkbox => checkbox.value);
+    }
+    // Add event listeners for all filter controls
+    if(halalOnly) halalOnly.addEventListener('change', applyFilters);
+    if(porkFreeOnly) porkFreeOnly.addEventListener('change', applyFilters);
+    if(veganOnly) veganOnly.addEventListener('change', applyFilters);
+    if(vegetarianOnly) vegetarianOnly.addEventListener('change', applyFilters);
+    
+    // Add event listeners for stall and rating filters
+    if(stallFilter) stallFilter.addEventListener('change', applyFilters);
+    if(minRatingFilter) minRatingFilter.addEventListener('change', applyFilters);
+    if(maxRatingFilter) maxRatingFilter.addEventListener('change', applyFilters);
+    
+    // Type chips handler
     const typeChips = $('#typeChips');
     let activeType = 'all';
     typeChips?.addEventListener('click', (e)=>{
@@ -578,10 +846,28 @@
       typeChips.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c===btn));
       applyFilters();
     });
+    
+    // Location chips handler
+    locationChips?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      activeLocation = btn.getAttribute('data-location') || 'all';
+      locationChips.querySelectorAll('.chip').forEach(c => 
+        c.classList.toggle('active', c === btn)
+      );
+      applyFilters();
+    });
     function applyFilters(){
       const q = (search?.value || '').toLowerCase();
-      const max = budget ? Number(budget.value) : Infinity;
+      // Get the current min and max values from the inputs
+      const minBudget = budgetMin ? Math.min(Number(budgetMin.value) || 0, Number(budgetMax.value) || 500) : 0;
+      const maxBudget = budgetMax ? Math.max(Number(budgetMin.value) || 0, Number(budgetMax.value) || 500) : 500;
+      const currentBudget = budget ? Number(budget.value) || 0 : 0;
       const maxPrep = prep ? Number(prep.value) : Infinity;
+      const minRating = minRatingFilter ? parseFloat(minRatingFilter.value) || 0 : 0;
+      const maxRating = maxRatingFilter ? parseFloat(maxRatingFilter.value) || 5 : 5;
+      const selectedStall = stallFilter ? stallFilter.value : 'all';
+      
       let shown = 0;
       cards.forEach(card => {
         const name = (card.getAttribute('data-name')||'').toLowerCase();
@@ -592,13 +878,40 @@
         const allergensText = (card.getAttribute('data-allergens')||'').toLowerCase();
         const isHalal = (card.getAttribute('data-halal')||'false') === 'true';
         const isPorkFree = (card.getAttribute('data-pork-free')||'false') === 'true';
-        const typeOk = (activeType==='all') || (type === (activeType||'').toLowerCase());
+        const isVegan = (card.getAttribute('data-vegan')||'false') === 'true';
+        const isVegetarian = (card.getAttribute('data-vegetarian')||'false') === 'true' || type.includes('vegetarian');
+        const location = card.getAttribute('data-location') || '';
+        const stall = card.getAttribute('data-stall') || '';
+        const rating = parseFloat(card.getAttribute('data-rating') || '0');
+        
+        // Filter conditions
+        const nameMatch = name.includes(q);
+        const typeOk = (activeType === 'all') || (type === (activeType || '').toLowerCase());
         const prepOk = (prepMins === null) || (prepMins <= maxPrep);
-        const allergen = (allergenSelect && allergenSelect.value && allergenSelect.value!=='any') ? allergenSelect.value.toLowerCase() : null;
-        const allergenOk = allergen ? !allergensText.includes(allergen) : true;
+        const locationOk = (activeLocation === 'all') || (location === activeLocation);
+        const stallOk = (selectedStall === 'all') || (stall === selectedStall);
+        const ratingOk = (rating >= minRating) && (rating <= maxRating);
+        
+        // Handle allergen filtering
+        let allergenOk = true;
+        const selectedAllergens = getSelectedAllergens();
+        if (selectedAllergens.length > 0) {
+          allergenOk = !selectedAllergens.some(allergen => allergensText.includes(allergen));
+        }
+        
+        // Handle dietary restrictions
         const halalOk = halalOnly ? (!halalOnly.checked || isHalal) : true;
         const porkOk = porkFreeOnly ? (!porkFreeOnly.checked || isPorkFree) : true;
-        const ok = (name.includes(q)) && (price <= max) && typeOk && prepOk && allergenOk && halalOk && porkOk;
+        const veganOk = veganOnly ? (!veganOnly.checked || isVegan) : true;
+        const vegetarianOk = vegetarianOnly ? (!vegetarianOnly.checked || isVegetarian) : true;
+        
+        // Price range check - show items within the min/max range that are also <= current budget
+        const priceInRange = (price >= minBudget) && (price <= maxBudget) && 
+                           (price <= currentBudget || currentBudget === 0);
+        
+        // Combine all conditions
+        const ok = nameMatch && priceInRange && typeOk && prepOk && locationOk && 
+                  stallOk && ratingOk && allergenOk && halalOk && porkOk && veganOk && vegetarianOk;
         card.style.display = ok ? '' : 'none';
         if(ok) shown++;
       });
@@ -613,17 +926,20 @@
           const demoName = `Sample ${demoType}`;
           const demoPrice = Math.min(max||100, 100);
           const demoPrep = Math.min(maxPrep||10, 10);
+          const demoLocation = activeLocation!=='all' ? activeLocation : 'gonz1f';
           const wantsHalal = !!(halalOnly && halalOnly.checked);
           const wantsPorkFree = !!(porkFreeOnly && porkFreeOnly.checked);
+          const wantsVegan = !!(veganOnly && veganOnly.checked);
           demoEl.setAttribute('data-name', demoName);
           demoEl.setAttribute('data-price', String(demoPrice));
           demoEl.setAttribute('data-type', demoType);
+          demoEl.setAttribute('data-location', demoLocation);
           demoEl.setAttribute('data-prep', String(demoPrep));
           demoEl.setAttribute('data-allergens', '');
           demoEl.setAttribute('data-halal', wantsHalal ? 'true' : 'false');
           demoEl.setAttribute('data-pork-free', wantsPorkFree ? 'true' : 'false');
+          demoEl.setAttribute('data-vegan', wantsVegan ? 'true' : 'false');
           demoEl.innerHTML = `
-            <img src="https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(demoType)}" alt="${demoName}" />
             <div class="name">${demoName}</div>
             <div class="desc">Prototype item that matches your filters.</div>
             <div class="price">₱ ${Number(demoPrice).toFixed(2)} · <span class="muted">${demoType}</span>${wantsHalal?' · <span class="muted">Halal</span>':''}${wantsPorkFree?' · <span class="muted">Pork-free</span>':''}</div>
@@ -815,292 +1131,159 @@
     }
   }
 
-  // ---- Product Page Renderer ----
-  async function renderProduct(){
-    const productImage = $('#productImage');
-    const productName = $('#productName');
-    const productStall = $('#productStall');
-    const productPrice = $('#productPrice');
-    const productDescription = $('#productDescription');
-    const productFavBtn = $('#productFavBtn');
-    const relatedProducts = $('#relatedProducts');
-    const relatedTitle = $('#relatedProductsTitle');
+  // Initialize Allergen Filter
+  function initializeAllergenFilter() {
+    const filterToggle = document.querySelector('.filter-toggle[aria-controls="allergenOptions"]');
+    const filterOptions = document.getElementById('allergenOptions');
+    const checkboxes = filterOptions.querySelectorAll('input[type="checkbox"]');
+    const selectedCount = filterToggle.querySelector('.filter-badge');
     
-    if(!productName) return; // Not on product page
-    
-    // Scroll to top smoothly when loading new product
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    const productId = getParam('id');
-    if(!productId){
-      productDescription.textContent = 'No product ID specified.';
-      return;
-    }
-    
-    // Show loading state while fetching new product
-    productName.textContent = 'Loading...';
-    productDescription.textContent = 'Loading product details...';
-    
-    // Try to get product data from Google Sheets first
-    let allMenuItems = await getSheetObjects(SHEETS_CFG.menuSheet);
-    let product = null;
-    let stallId = null;
-    let stallName = null;
-    
-    if(allMenuItems && allMenuItems.length > 0){
-      // Normalize menu items
-      const normalized = allMenuItems.map(r=>({
-        id: r.id || toKey(r.name || r.item),
-        name: r.name || r.item || 'Menu Item',
-        price: Number(String(r.price||r.cost||'').toString().replace(/[^0-9.]/g,'')) || 0,
-        description: r.description || r.desc || '',
-        image: r.image || r.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(r.name||r.item||'meal')}`,
-        stall: r.stall || r.stall_id || r.vendor || r.seller || r.stall_name || '',
-        stallName: r.stall_name || r.stall || r.vendor || r.seller || '',
-        category: r.category || r.item_category || '',
-        allergens: r.allergens || '',
-        halal: (String(r.halal||'').toLowerCase()==='true') || /halal/i.test(String(r.tags||'')),
-        porkFree: (String(r.pork_free||r.porkfree||'').toLowerCase()==='true') || /pork[- ]?free/i.test(String(r.tags||'')),
-        prep: Number(String(r.prep_time||r.preparation_time||'').toString().replace(/[^0-9.]/g,'')) || null,
-        addOns: r.add_ons || r.addons || '',
-        calories: Number(r.calories||0) || null,
-        servingSize: r.serving_size || r.servingSize || null
-      }));
-      
-      product = normalized.find(it => it.id === productId);
-      if(product){
-        stallId = toKey(product.stall);
-        stallName = product.stallName || product.stall;
+    // Toggle dropdown
+    filterToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = filterToggle.getAttribute('aria-expanded') === 'true';
+      filterToggle.setAttribute('aria-expanded', !isExpanded);
+      filterOptions.setAttribute('aria-hidden', isExpanded);
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!filterOptions.contains(e.target) && e.target !== filterToggle) {
+        filterToggle.setAttribute('aria-expanded', 'false');
+        filterOptions.setAttribute('aria-hidden', 'true');
       }
+    });
+
+    // Update count and apply filters when checkboxes change
+    function updateSelectedCount() {
+      const selected = Array.from(checkboxes).filter(checkbox => checkbox.checked).length;
+      selectedCount.textContent = selected;
+      selectedCount.style.display = selected > 0 ? 'inline-flex' : 'none';
+      applyFilters();
     }
-    
-    // Fallback to local JSON if Google Sheets didn't work
-    if(!product){
-      const local = await getLocalData();
-      if(local && Array.isArray(local)){
-        for(const stall of local){
-          if(Array.isArray(stall.menu)){
-            const found = stall.menu.find(it => toKey(it.item) === productId);
-            if(found){
-              product = {
-                id: toKey(found.item),
-                name: found.item,
-                price: Number(String(found.price).replace(/[^0-9.]/g,'')) || 0,
-                description: found.description || '',
-                image: found.image || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(found.item)}`,
-                stall: toKey(stall.stall_name),
-                stallName: stall.stall_name,
-                category: found.category || '',
-                allergens: Array.isArray(found.allergens) ? found.allergens.join(', ') : (found.allergens || ''),
-                halal: found.halal || false,
-                porkFree: found.porkFree || false,
-                prep: found.prep || null,
-                addOns: found.addOns || '',
-                calories: Number(found.calories||0) || null,
-                servingSize: found.serving_size || found.servingSize || null
-              };
-              stallId = toKey(stall.stall_name);
-              stallName = stall.stall_name;
-              break;
-            }
-          }
-        }
-      }
-    }
-    
-    // If still no product found, show error
-    if(!product){
-      productName.textContent = 'Product Not Found';
-      productDescription.textContent = 'The requested product could not be found.';
-      if(relatedProducts) relatedProducts.style.display = 'none';
-      if(relatedTitle) relatedTitle.style.display = 'none';
-      return;
-    }
-    
-    // Update product details
-    productName.textContent = product.name;
-    productImage.src = product.image;
-    productImage.alt = product.name;
-    productPrice.textContent = `₱ ${product.price.toFixed(2)}`;
-    
-    // Build description in order: description → nutrition → allergens → category → dietary info
-    let descParts = [product.description];
-    
-    // 2. Nutrition info (calories and serving size)
-    if(product.calories || product.servingSize) {
-      const nutritionParts = [];
-      if(product.calories) nutritionParts.push(`${product.calories} calories`);
-      if(product.servingSize) nutritionParts.push(`${product.servingSize}`);
-      descParts.push(nutritionParts.join(' · '));
-    }
-    
-    // 3. Allergens
-    if(product.allergens && String(product.allergens).trim()) {
-      descParts.push(`Allergens: ${product.allergens}`);
-    } else {
-      descParts.push('Allergens: None');
-    }
-    
-    // 4. Category
-    if(product.category) descParts.push(`Category: ${product.category}`);
-    
-    // 5. Dietary preferences
-    if(product.halal) descParts.push('✓ Halal');
-    if(product.porkFree) descParts.push('✓ Pork-free');
-    if(product.prep) descParts.push(`Preparation time: ${product.prep} minutes`);
-    
-    productDescription.innerHTML = descParts.filter(Boolean).join('<br>');
-    
-    // Make stall name a clickable link
-    if(stallId && stallName){
-      productStall.innerHTML = `<a href="shop.html?stall=${encodeURIComponent(stallId)}&name=${encodeURIComponent(stallName)}" style="color: inherit; text-decoration: underline;">${stallName}</a>`;
-    } else {
-      productStall.textContent = stallName || 'Unknown Stall';
-    }
-    
-    // Update favorite button
-    if(productFavBtn){
-      productFavBtn.setAttribute('data-id', product.id);
-      if(isFav(product.id)){
-        productFavBtn.classList.add('active');
-        productFavBtn.textContent = '★ Favorited';
-      } else {
-        productFavBtn.classList.remove('active');
-        productFavBtn.textContent = '☆ Favorite';
-      }
-    }
-    
-    // Show add-ons if available
-    const addOnsSection = $('#productAddOns');
-    const addOnsList = $('#addOnsList');
-    if(product.addOns && String(product.addOns).trim()){
-      const addOnsArray = String(product.addOns).split(',').map(s => s.trim()).filter(Boolean);
-      if(addOnsArray.length > 0 && addOnsList){
-        addOnsList.innerHTML = addOnsArray.map(addon => 
-          `<label><input type="checkbox" /> ${addon}</label>`
-        ).join('');
-        if(addOnsSection) addOnsSection.style.display = '';
-      }
-    }
-    
-    // Load products from same stall and other stalls into TWO separate sections
-    const sameStallSection = $('#sameStallSection');
-    const sameStallTitle = $('#sameStallTitle');
-    const sameStallProducts = $('#sameStallProducts');
-    const otherStallsSection = $('#otherStallsSection');
-    const otherStallsProducts = $('#otherStallsProducts');
-    
-    // Reset section visibility for new product load
-    if(sameStallSection) sameStallSection.style.display = '';
-    if(otherStallsSection) otherStallsSection.style.display = '';
-    
-    let sameStallItems = [];
-    let otherStallItems = [];
-    
-    if(allMenuItems && allMenuItems.length > 0){
-      const normalized = allMenuItems.map(r=>({
-        id: r.id || toKey(r.name || r.item),
-        name: r.name || r.item || 'Menu Item',
-        price: Number(String(r.price||r.cost||'').toString().replace(/[^0-9.]/g,'')) || 0,
-        description: r.description || r.desc || '',
-        image: r.image || r.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(r.name||r.item||'meal')}`,
-        stall: r.stall || r.stall_id || r.vendor || r.seller || r.stall_name || '',
-        stallName: r.stall_name || r.stall || r.vendor || r.seller || '',
-        category: r.category || r.item_category || ''
-      }));
-      
-      // Get items from the same stall
-      sameStallItems = normalized.filter(it => 
-        toKey(it.stall) === stallId && it.id !== productId
-      ).slice(0, 6);
-      
-      // Get items from other stalls
-      otherStallItems = normalized.filter(it => 
-        toKey(it.stall) !== stallId && it.id !== productId
-      ).slice(0, 6);
-    }
-    
-    // Fallback to local JSON
-    if(sameStallItems.length === 0 && otherStallItems.length === 0){
-      const local = await getLocalData();
-      if(local && Array.isArray(local)){
-        const allItems = [];
-        local.forEach(stall => {
-          if(Array.isArray(stall.menu)){
-            stall.menu.forEach(it => {
-              allItems.push({
-                id: toKey(it.item),
-                name: it.item,
-                price: Number(String(it.price).replace(/[^0-9.]/g,'')) || 0,
-                description: it.description || '',
-                image: it.image || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(it.item)}`,
-                stallName: stall.stall_name,
-                stall: toKey(stall.stall_name),
-                category: it.category || ''
-              });
-            });
-          }
-        });
-        
-        // Get items from same stall and other stalls
-        sameStallItems = allItems.filter(it => it.stall === stallId && it.id !== productId).slice(0, 6);
-        otherStallItems = allItems.filter(it => it.stall !== stallId && it.id !== productId).slice(0, 6);
-      }
-    }
-    
-    // Render "More from [Stall Name]" section
-    if(sameStallItems.length > 0 && sameStallProducts){
-      if(sameStallTitle) sameStallTitle.textContent = `More from ${stallName}`;
-      sameStallProducts.innerHTML = sameStallItems.map(it => `
-        <a class="card-item" href="product.html?id=${encodeURIComponent(it.id)}">
-          <img src="${it.image}" alt="${it.name}" />
-          <div class="name">${it.name}</div>
-          <div class="desc">${it.description}</div>
-          <div class="price">₱ ${it.price.toFixed(2)}</div>
-        </a>
-      `).join('');
-    } else {
-      // Hide section if no items from same stall
-      if(sameStallSection) sameStallSection.style.display = 'none';
-    }
-    
-    // Render "You May Also Like" section (items from other stalls)
-    if(otherStallItems.length > 0 && otherStallsProducts){
-      otherStallsProducts.innerHTML = otherStallItems.map(it => `
-        <a class="card-item" href="product.html?id=${encodeURIComponent(it.id)}">
-          <img src="${it.image}" alt="${it.name}" />
-          <div class="name">${it.name}</div>
-          <div class="desc">${it.description}</div>
-          <div class="price">₱ ${it.price.toFixed(2)}${it.stallName ? ` <span class="muted">· ${it.stallName}</span>` : ''}</div>
-        </a>
-      `).join('');
-    } else {
-      // Hide section if no items from other stalls
-      if(otherStallsSection) otherStallsSection.style.display = 'none';
-    }
-    
-    // Re-hydrate favorite buttons
-    hydrateFavButtons();
+
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    // Initialize
+    updateSelectedCount();
   }
 
+  function renderMenu() {
+    const cardsWrap = document.querySelector('.cards.mt-28');
+    if (!cardsWrap) return;
+
+    // Show loading state
+    cardsWrap.innerHTML = '<div class="loading-message">Loading menu items...</div>';
+
+    // Get stall filter from URL if any
+    const stallId = getParam('stall');
+    const stallName = getParam('name');
+    
+    // Update page title if we're viewing a specific stall
+    const bannerTitle = document.querySelector('.banner .title');
+    if (bannerTitle && stallName) {
+      bannerTitle.textContent = stallName;
+    }
+
+    // Fetch menu items from Google Sheets
+    getSheetObjects(SHEETS_CFG.menuSheet)
+      .then(items => {
+        if (!items || items.length === 0) {
+          throw new Error('No menu items found in the Google Sheet');
+        }
+
+        // Process and normalize items
+        const processedItems = items.map(item => ({
+          id: item.id || toKey(item.name || item.item || ''),
+          name: item.name || item.item || 'Menu Item',
+          price: parseFloat(String(item.price || item.cost || '0').replace(/[^0-9.]/g, '')) || 0,
+          description: item.description || item.desc || '',
+          image: item.image || item.photo || `https://source.unsplash.com/featured/400x300?food,${encodeURIComponent(item.name || item.item || 'meal')}`,
+          stall: item.stall || item.stall_id || item.vendor || item.seller || item.stall_name || '',
+          category: item.category || item.item_category || '',
+          rating: parseFloat(item.rating || 0),
+          calories: parseInt(item.calories || 0, 10),
+          prep: parseInt(String(item.prep_time || item.preparation_time || '0').replace(/\D/g, ''), 10) || 0,
+          allergens: item.allergens || '',
+          halal: (String(item.halal || '').toLowerCase() === 'true') || /halal/i.test(String(item.tags || '')),
+          porkFree: (String(item.pork_free || item.porkfree || '').toLowerCase() === 'true') || /pork[- ]?free/i.test(String(item.tags || '')),
+          vegan: (String(item.vegan || '').toLowerCase() === 'true') || /vegan/i.test(String(item.tags || '')),
+          vegetarian: (String(item.vegetarian || '').toLowerCase() === 'true') || /vegetarian/i.test(String(item.tags || '')),
+          popular: (String(item.popular || '').toLowerCase() === 'true')
+        }));
+
+        // Filter by stall if specified in URL
+        let filteredItems = processedItems;
+        if (stallId || stallName) {
+          const targetId = (stallId || '').toLowerCase();
+          const targetName = (stallName || '').toLowerCase();
+          filteredItems = processedItems.filter(item => 
+            (stallId && toKey(item.stall) === targetId) ||
+            (stallName && item.stall.toLowerCase().includes(targetName))
+          );
+        }
+
+        // Render cards
+        if (filteredItems.length > 0) {
+          cardsWrap.innerHTML = filteredItems.map(item => createMenuItemCard(item)).join('');
+          
+          // Re-initialize event listeners
+          if (typeof hydrateFavButtons === 'function') {
+            hydrateFavButtons();
+          }
+          if (typeof hydrateFilters === 'function') {
+            hydrateFilters();
+          }
+        } else {
+          cardsWrap.innerHTML = '<div class="error-message">No menu items found for this stall.</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading menu:', error);
+        cardsWrap.innerHTML = `
+          <div class="error-message">
+            <p>Failed to load menu items. Please try again later.</p>
+            <p><small>Error: ${error.message}</small></p>
+          </div>
+        `;
+      });
+  }
+
+  // Make renderMenu available globally for manual triggering if needed
+  window.renderMenu = renderMenu;
+
+  // Initialize when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
-    // Ensure logo loads; fallback if custom logo missing
-    (function hydrateLogo(){
+    // Initialize logo hydration
+    (function hydrateLogo() {
       document.querySelectorAll('img.logo-img').forEach(img => {
-        const desired = './assets/eagle logo.png';
-        // Set the logo to eagle logo.png
-        if(!img.src.includes('eagle logo.png')){ img.src = desired; }
+        const desired = './assets/logo.png?v=' + Date.now();
+        img.onerror = function() { 
+          this.onerror = null; 
+          this.src = './assets/eagle.svg'; 
+        };
+        if (!img.src.includes('assets/logo.png')) { 
+          img.src = desired; 
+        }
       });
     })();
-    hydrateFavButtons();
-    hydrateFilters();
-    hydrateNav();
-    hydrateLogin();
-    hydrateProfile();
-    renderStalls();
-    renderMenu();
-    renderProduct();
-    hydrateBudgetPage();
-    renderMap();
+
+    // Initialize components
+    if (typeof initializeAllergenFilter === 'function') initializeAllergenFilter();
+    if (typeof hydrateFavButtons === 'function') hydrateFavButtons();
+    if (typeof hydrateFilters === 'function') hydrateFilters();
+    if (typeof hydrateNav === 'function') hydrateNav();
+    if (typeof hydrateLogin === 'function') hydrateLogin();
+    if (typeof hydrateProfile === 'function') hydrateProfile();
+    if (typeof renderStalls === 'function') renderStalls();
+    if (typeof hydrateBudgetPage === 'function') hydrateBudgetPage();
+    if (typeof renderMap === 'function') renderMap();
+    
+    // Load menu if on shop page
+    if (document.querySelector('.cards.mt-28')) {
+      renderMenu();
+    }
   });
 })();

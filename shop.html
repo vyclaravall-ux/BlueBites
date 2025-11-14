@@ -10,7 +10,7 @@
   <a id="top"></a>
   <div class="wrapper">
     <header class="header">
-      <div class="brand"><a href="index.html" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:inherit;"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></a></div>
+      <div class="brand"><a href="index.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;"><img class="logo-img" src="./assets/eagle.svg" alt="Blue Bites" /><span>Blue Bites</span></a></div>
       <nav class="nav">
         <a href="map.html">Map</a>
         <a href="shop.html#filtersTop">Filter Menu</a>
@@ -23,7 +23,7 @@
     <section class="section">
       <div class="banner">
         <img src="https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1600&auto=format&fit=crop" alt="Shop banner" />
-        <div class="title">Shop Name</div>
+        <div class="title">Complete Menu</div>
         <div class="fav">★ Favorite</div>
       </div>
 
@@ -40,74 +40,121 @@
         <button class="chip" data-type="Dessert">Dessert</button>
         <button class="chip" data-type="Vegetarian">Vegetarian</button>
       </div>
+      <div class="chips" id="locationChips" style="margin-top: 0.5rem;">
+        <button class="chip active" data-location="all">All Locations</button>
+        <button class="chip" data-location="gonz1f">Gonz 1F</button>
+        <button class="chip" data-location="gonz2f">Gonz 2F</button>
+        <button class="chip" data-location="jsec">JSEC</button>
+        <button class="chip" data-location="iso">ISO</button>
+        <button class="chip" data-location="rizal">Rizal Lib</button>
+      </div>
       <div class="filters">
         <input id="search" class="input-text" type="text" placeholder="Search menu..." />
-        <label class="muted" style="display: flex; align-items: center; gap: 8px;">
-          <span>Budget: ₱</span>
-          <input id="budgetInput" type="number" min="50" max="500" step="10" value="200" style="width: 80px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;" />
-          <input id="budget" class="range" type="range" min="50" max="500" step="10" value="200" style="flex: 1;" />
+        <label class="muted">Budget: ₱<span id="budgetValue">200</span>
+          <input id="budget" class="range" type="range" min="0" max="500" step="10" value="200" />
+          <div class="budget-inputs">
+            <div class="budget-input-group">
+              <span>Min:</span>
+              <input type="number" id="budgetMin" class="input" min="0" max="500" placeholder="Min" value="0" />
+            </div>
+            <div class="budget-input-group">
+              <span>Max:</span>
+              <input type="number" id="budgetMax" class="input" min="0" max="500" placeholder="Max" value="500" />
+            </div>
+          </div>
         </label>
         <label class="muted">Prep ≤ <span id="prepValue">10</span> min
           <input id="prep" class="range" type="range" min="0" max="20" step="5" value="10" />
         </label>
-        <label class="muted">Exclude Allergen
-          <select id="allergenSelect" class="input" style="min-width:160px;">
-            <option value="any">None</option>
-            <option>Egg</option>
-            <option>Wheat</option>
-            <option>Soy</option>
-            <option>Fish</option>
-            <option>Shellfish</option>
-            <option>Dairy</option>
-          </select>
-        </label>
-        <label class="muted"><input type="checkbox" id="halalOnly" /> Halal only</label>
-        <label class="muted"><input type="checkbox" id="porkFreeOnly" /> Pork-free only</label>
+        
+        <!-- Allergen Filter Dropdown -->
+        <div class="filter-group">
+          <button class="action-btn action-secondary filter-toggle" type="button" aria-expanded="false" aria-controls="allergenOptions">
+            <span>Exclude Allergens</span>
+            <span class="filter-badge">0</span>
+            <span class="toggle-icon">▼</span>
+          </button>
+          <div id="allergenOptions" class="filter-options" aria-hidden="true" role="menu">
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="egg" role="checkbox" /> Egg
+            </label>
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="wheat" role="checkbox" /> Wheat
+            </label>
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="soy" role="checkbox" /> Soy
+            </label>
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="fish" role="checkbox" /> Fish
+            </label>
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="shellfish" role="checkbox" /> Shellfish
+            </label>
+            <label class="filter-option" role="menuitemcheckbox">
+              <input type="checkbox" name="allergen" value="dairy" role="checkbox" /> Dairy
+            </label>
+          </div>
+        </div>
+        
+        <div class="filter-options-row">
+          <label class="filter-option">
+            <input type="checkbox" id="halalOnly" /> Halal
+          </label>
+          <label class="filter-option">
+            <input type="checkbox" id="porkFreeOnly" /> Pork-free
+          </label>
+          <label class="filter-option">
+            <input type="checkbox" id="veganOnly" /> Vegan
+          </label>
+          <label class="filter-option">
+            <input type="checkbox" id="vegetarianOnly" /> Vegetarian
+          </label>
+        </div>
       </div>
       <div class="cards mt-28" id="menuCards" data-static="true">
-        <div class="card-item" data-price="100" data-name="Egg Rice" data-type="Rice Meal">
-          <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?q=80&w=1200&auto=format&fit=crop" alt="Menu 1" />
+        <div class="card-item" data-price="100" data-name="Egg Rice" data-type="Rice Meal" data-stall="Gonzaga Cafeteria" data-rating="4.5">
           <div class="name">Egg Rice</div>
           <div class="desc">Classic breakfast plate</div>
-          <div class="price">₱ 100.00 · <span class="muted">450 kcal · ★★★★☆</span></div>
+          <div class="price">₱ 100.00 · <span class="muted">450 kcal · ★★★★☆ (4.5)</span></div>
+          <div class="food-stall">From: <a href="map.html?stall=gonzaga-cafeteria" class="stall-link">Gonzaga Cafeteria</a></div>
           <a class="action-btn action-primary" href="product.html">View</a>
           <button class="fav-btn" data-id="m1">☆ Favorite</button>
         </div>
-        <div class="card-item" data-price="150" data-name="Congee" data-type="Noodles">
-          <img src="https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1200&auto=format&fit=crop" alt="Menu 2" />
+        <div class="card-item" data-price="150" data-name="Congee" data-type="Noodles" data-stall="JSEC Noodle House" data-rating="4.2">
           <div class="name">Congee</div>
           <div class="desc">Comfort rice porridge</div>
-          <div class="price">₱ 150.00 · <span class="muted">320 kcal · ★★★★☆</span></div>
+          <div class="price">₱ 150.00 · <span class="muted">320 kcal · ★★★★☆ (4.2)</span></div>
+          <div class="food-stall">From: <a href="map.html?stall=jsec-noodle-house" class="stall-link">JSEC Noodle House</a></div>
           <a class="action-btn action-primary" href="product.html">View</a>
           <button class="fav-btn" data-id="m2">☆ Favorite</button>
         </div>
-        <div class="card-item" data-price="220" data-name="Watermelon Shake" data-type="Drink">
-          <img src="https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1200&auto=format&fit=crop" alt="Menu 3" />
+        <div class="card-item" data-price="220" data-name="Watermelon Shake" data-type="Drink" data-stall="ISO Refreshments" data-rating="3.8">
           <div class="name">Watermelon Shake</div>
           <div class="desc">Fresh blended drink</div>
-          <div class="price">₱ 220.00 · <span class="muted">180 kcal · ★★★☆☆</span></div>
+          <div class="price">₱ 220.00 · <span class="muted">180 kcal · ★★★☆☆ (3.8)</span></div>
+          <div class="food-stall">From: <a href="map.html?stall=iso-refreshments" class="stall-link">ISO Refreshments</a></div>
           <a class="action-btn action-primary" href="product.html">View</a>
           <button class="fav-btn" data-id="m3">☆ Favorite</button>
         </div>
-        <div class="card-item" data-price="180" data-name="Beef Plate" data-type="Rice Meal">
-          <img src="https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?q=80&w=1200&auto=format&fit=crop" alt="Menu 4" />
+        <div class="card-item" data-price="180" data-name="Beef Plate" data-type="Rice Meal" data-stall="JSEC Grill" data-rating="4.0">
           <div class="name">Beef Plate</div>
           <div class="desc">Description of fourth product</div>
-          <div class="price">₱ 180.00</div>
+          <div class="price">₱ 180.00 · <span class="muted">★★★☆☆ (4.0)</span></div>
+          <div class="food-stall">From: <a href="map.html?stall=jsec-grill" class="stall-link">JSEC Grill</a></div>
           <a class="action-btn action-primary" href="product.html">View</a>
           <button class="fav-btn" data-id="m4">☆ Favorite</button>
         </div>
-        <div class="card-item" data-price="240" data-name="Sizzling Meal" data-type="Rice Meal">
-          <img src="https://images.unsplash.com/photo-1478144592103-25e218a04891?q=80&w=1200&auto=format&fit=crop" alt="Menu 5" />
+        <div class="card-item" data-price="240" data-name="Sizzling Meal" data-type="Rice Meal" data-stall="Gonzaga Cafeteria" data-rating="4.7">
           <div class="name">Sizzling Meal</div>
           <div class="desc">Description of fifth product</div>
-          <div class="price">₱ 240.00</div>
+          <div class="price">₱ 240.00 · <span class="muted">★★★★☆ (4.7)</span></div>
+          <div class="food-stall">From: <a href="map.html?stall=gonzaga-cafeteria" class="stall-link">Gonzaga Cafeteria</a></div>
           <a class="action-btn action-primary" href="product.html">View</a>
           <button class="fav-btn" data-id="m5">☆ Favorite</button>
         </div>
-        <div class="card-item" data-price="120" data-name="Veg Bowl" data-type="Vegetarian">
-          <img src="https://images.unsplash.com/photo-1604908176997-4316523ea8b4?q=80&w=1200&auto=format&fit=crop" alt="Menu 6" />
+        <div class="card-item" data-price="120" data-name="Veg Bowl" data-type="Vegetarian" data-stall="Green Bites" data-rating="4.3">
           <div class="name">Veg Bowl</div>
+          <div class="food-stall">From: <a href="map.html?stall=green-bites" class="stall-link">Green Bites</a></div>
           <div class="desc">Description of sixth product</div>
           <div class="price">₱ 120.00</div>
           <a class="action-btn action-primary" href="product.html">View</a>
@@ -135,7 +182,7 @@
     </section>
 
     <footer class="footer">
-      <div class="brand"><a href="index.html" style="display:flex;align-items:center;gap:4px;text-decoration:none;color:inherit;"><img class="logo-img" src="./assets/eagle logo.png" alt="Blue Bites" /><span>Blue Bites</span></a></div>
+      <div class="brand"><a href="index.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;"><img class="logo-img" src="./assets/eagle.svg" alt="Blue Bites" /><span>Blue Bites</span></a></div>
       <div class="actions">
         <a class="action-btn action-primary" href="index.html">Home</a>
         <a class="action-btn action-secondary" href="#top">Back to Top</a>
